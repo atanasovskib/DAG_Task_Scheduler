@@ -1,9 +1,6 @@
 package com.atanasovski.dagscheduler;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Blagoj on 24-Feb-16.
@@ -89,6 +86,22 @@ public abstract class Executable implements Runnable {
 
             this.inputParameters.get(entry.getKey()).addAll(entry.getValue());
         });
+    }
+
+    public void addInputParameter(String parameterName, Object... values) {
+        if (!this.inputParameters.containsKey(parameterName)) {
+            this.inputParameters.put(parameterName, new LinkedList<>());
+        }
+
+        this.inputParameters.get(parameterName).addAll(Arrays.asList(values));
+    }
+
+    public void addInputParameter(String parameterName, Collection<? extends Object> values) {
+        if (!this.inputParameters.containsKey(parameterName)) {
+            this.inputParameters.put(parameterName, new LinkedList<>());
+        }
+
+        this.inputParameters.get(parameterName).addAll(values);
     }
 
     public final List<String> getErrors() {

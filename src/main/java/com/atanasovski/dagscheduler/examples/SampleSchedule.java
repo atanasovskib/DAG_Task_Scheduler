@@ -3,6 +3,7 @@ package com.atanasovski.dagscheduler.examples;
 import com.atanasovski.dagscheduler.Executable;
 import com.atanasovski.dagscheduler.Schedule;
 import com.atanasovski.dagscheduler.Scheduler;
+import com.sun.corba.se.spi.orbutil.fsm.Input;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,12 +20,8 @@ public class SampleSchedule extends Schedule {
     public SampleSchedule(Scheduler s, List<Integer> input1, List<Integer> input2) {
         Executable sq1 = new SquareTheInputExecutable(s, "Square1");
         Executable sq2 = new SquareTheInputExecutable(s, "Square2");
-        Map<String, List<? extends Object>> sq1Input = new HashMap<>();
-        Map<String, List<? extends Object>> sq2Input = new HashMap<>();
-        sq1Input.put(Input_Square, input1);
-        sq2Input.put(Input_Square, input2);
-        sq1.addInputParameters(sq1Input);
-        sq2.addInputParameters(sq2Input);
+        sq1.addInputParameter(Input_Square,input1);
+        sq2.addInputParameter(Input_Square,input2);
         this.add(sq1);
         this.add(sq2);
         this.add(new SumTheInputExecutable(s, "Sum"), sq1, sq2);
