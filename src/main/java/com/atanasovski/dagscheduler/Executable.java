@@ -81,7 +81,7 @@ public abstract class Executable implements Runnable {
         }
     }
 
-    public void addInputParameters(Map<String, List<Object>> parameters) {
+    public void addInputParameters(Map<String, List<? extends Object>> parameters) {
         parameters.entrySet().forEach(entry -> {
             if (!this.inputParameters.containsKey(entry.getKey())) {
                 this.inputParameters.put(entry.getKey(), new LinkedList<>());
