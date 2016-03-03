@@ -16,7 +16,7 @@ public class SquareEach extends Executable {
     public void execute() {
         List<? extends Object> a = this.get(SampleSchedule.Input_Square);
         a.stream().forEach(k -> {
-            int aa = (int) k;
+            int aa = (Integer) k;
             produce(SampleSchedule.Result_Square, aa * aa);
         });
     }
