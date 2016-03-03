@@ -9,11 +9,12 @@ This is supposed to be a library that will allow a developer to quickly define e
 3. Not tested for concurrency errors, deadlocks or anything else
 
 ## Examples
-### Example 1:
+### Example 1: 
+A sample workflow in an application server
 * **Task CheckUserCredentials** - go to DB and check if credentials are ok
 * **Task PrepareTemplate** - read some file that contains a web site template
 * **Task DisplayResult** - if credentials are ok, put username in template, else put error
-* 
+ 
 Dependencies DAG
 ```
 CheckUserCredentials---→DisplayResult
@@ -95,6 +96,8 @@ Task of type Sum = takes a list of integers, reduces them by addition
 * **Task Square1** - take numbers from 1 to 5, square them
 * **Task Square2** - take numbers from 6 to 10, square them
 * **Task Sum** - take results from Square1 and Square2, apply reduction by addition and produce result
+ 
+Dependencies DAG
 ```
 Square1---→Sum
 Square2---↗
@@ -152,3 +155,4 @@ public static void main(String... args){
     System.out.println("results:" + schedule.getResults());
 }
 ```
+### Example - 3 Using a shared resource
