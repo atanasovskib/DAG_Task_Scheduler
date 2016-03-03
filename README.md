@@ -16,31 +16,32 @@ Example: Task Square1 - take numbers from 1 to 5, square them
          Task Sum - take results from Square1 and Square2, apply reduction by addition and produce result
 ```java
 public class SquareTheInputExecutable extends Executable {
-    public SquareTheInputExecutable(Scheduler scheduler, String id) {
-        super(scheduler, id);
+    public SquareTheInputExecutable(String id) {
+        super(id);
     }
 
     @Override
     public void execute() {
-        List<Object> input = this.get(SampleSchedule.Input_Square);
-        input.stream().forEach(k -> {
-            int a = ((Integer) k).intValue();
-            produce(SampleSchedule.Result_Square, a*a);
+        List<? extends Object> a = this.get(SampleSchedule.Input_Square);
+        a.stream().forEach(k -> {
+            int aa = ((Integer) k).intValue();
+            aa = aa * aa;
+            produce(SampleSchedule.Result_Square, aa);
         });
     }
 }
 
 public class SumTheInputExecutable extends Executable {
-    public SumTheInputExecutable(Scheduler scheduler, String id) {
-        super(scheduler, id);
+    public SumTheInputExecutable(String id) {
+        super(id);
     }
 
     @Override
     public void execute() {
-        List<Object> inputParams = this.get(SampleSchedule.Result_Square);
+        List<? extends Object> inputParams = this.get(SampleSchedule.Result_Square);
         int result = inputParams.stream()
-                .map(inputElement -> ((Integer) inputElement).intValue())
-                .reduce(0, (k, l) -> k.intValue() + l.intValue());
+            .map(element -> ((Integer) element).intValue())
+            .reduce(0, (k, l) -> k.intValue() + l.intValue());
         produce(SampleSchedule.Final_Result, result);
     }
 }
@@ -49,22 +50,20 @@ public class SampleSchedule extends Schedule {
     public static final String Input_Square = "input_square";
     public static final String Result_Square = "result_square";
     public static final String Final_Result = "final_result";
+
+    public SampleSchedule(List<Integer> input1, List<Integer> input2) {
+        Executable sq1 = new SquareTheInputExecutable("Square1").addInput(Input_Square, input1);
+        Executable sq2 = new SquareTheInputExecutable("Square2").addInput(Input_Square, input2);
+        this.add(sq1)
+            .add(sq2)
+            .add(new SumTheInputExecutable("Sum"), sq1, sq2);
+    }
 }
 
-public SampleSchedule(Scheduler s, List<Integer> input1, List<Integer> input2) {
-    Executable sq1 = new SquareTheInputExecutable(s, "Square1");
-    Executable sq2 = new SquareTheInputExecutable(s, "Square2");
-    sq1.addInputParameters(input1);
-    sq2.addInputParameters(input2);
-    this.add(sq1);
-    this.add(sq2);
-    this.add(new SumTheInputExecutable(s, "Sum"), sq1, sq2);
-}
-
-void main(String... args){
-  Scheduler s = new Scheduler(new DummySchedulingAlgorithm());
-  Schedule schedule = new SampleSchedule(s, Arrays.asList(1,2,3,4,5), Arrays.asList(6,7,8,9,10);
-  s.execute(schedule);
-  System.out.println(s.getResults());
+public static void main(String... args){
+    Scheduler s = new Scheduler(new DummySchedulingAlgorithm());
+    Schedule schedule = new SampleSchedule(Arrays.asList(1, 2, 3, 4, 5), Arrays.asList(6, 7, 8, 9, 10));
+    s.execute(schedule);
+    System.out.println("results:" + schedule.getResults());
 }
 ```
