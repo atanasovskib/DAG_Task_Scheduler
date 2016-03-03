@@ -1,6 +1,6 @@
 package com.atanasovski.dagscheduler;
 
-import com.atanasovski.dagscheduler.examples.SampleSchedule;
+import com.atanasovski.dagscheduler.examples.example2.SampleSchedule;
 
 import java.util.Arrays;
 
