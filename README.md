@@ -8,12 +8,97 @@ This is supposed to be a library that will allow a developer to quickly define e
 2. Performance of the scheduler has not been taken into consideration
 3. Not tested for concurrency errors, deadlocks or anything else
 
-## Example
+## Examples
+### Example 1:
+* **Task CheckUserCredentials** - go to DB and check if credentials are ok
+* **Task PrepareTemplate** - read some file that contains a web site template
+* **Task DisplayResult** - if credentials are ok, put username in template, else put error
+* 
+Dependencies DAG
+```
+CheckUserCredentials---→DisplayResult
+PrepareTemplate--------↗
+```
+```java
+public class CheckCredentialsForUser extends Executable {
+
+    public CheckCredentialsForUser(String id) {
+        super(id);
+    }
+
+    @Override
+    public void execute() {
+        List<? extends Object> input = this.get(LogInUserSchedule.Username);
+        if (input == null || input.size() != 1) {
+            error("wrong input");
+        }
+
+        //Simulate checking of credentials in database
+        Thread.sleep(1000);
+        produce(LogInUserSchedule.CheckCredentialsResult, true);
+        produce(LogInUserSchedule.Username, input.get(0));
+    }
+}
+
+public class PrepareTemplate extends Executable {
+    public PrepareTemplate(String id) {
+        super(id);
+    }
+
+    @Override
+    public void execute() {
+        //Simulate workload of reading file
+        Thread.sleep(500);
+        produce(LogInUserSchedule.Template, "<html>something something {insert_result_here}</html>");
+    }
+}
+
+public class DisplayResult extends Executable {
+    public DisplayResult(String id) {
+        super(id);
+    }
+
+    @Override
+    public void execute() {
+        List<? extends Object> credOk = get(LogInUserSchedule.CheckCredentialsResult);
+        if (true == (Boolean) credOk.get(0)) {
+            String username = (String) get(LogInUserSchedule.Username).get(0);
+            String template = (String) get(LogInUserSchedule.Template).get(0);
+            produce(LogInUserSchedule.Result, template.replaceAll("\\{insert_result_here\\}", username));
+        } else {
+            String template = (String) get(LogInUserSchedule.Template).get(0);
+            produce(LogInUserSchedule.Result, template.replaceAll("\\{insert_result_here\\}", "Wrong credentials!!!"));
+        }
+    }
+}
+
+public class LogInUserSchedule extends Schedule {
+    public static final String CheckCredentialsResult = "credentials";
+    public static final String Template = "template";
+    public static final String Username = "username";
+    public static final String Result = "result";
+
+    public LogInUserSchedule(String userName) {
+        Executable cred = new CheckCredentialsForUser("check credentials")
+                .addInput(Username, userName);
+        Executable prep = new PrepareTemplate("prepare template");
+        this.add(cred)
+            .add(prep)
+            .add(new DisplayResult("display result"), cred, prep);
+    }
+}
+```
+### Example 2: 
 Task of type Square = takes a list of integers, squares them
+
 Task of type Sum = takes a list of integers, reduces them by addition
-Example: Task Square1 - take numbers from 1 to 5, square them
-         Task Square2 - take numbers from 6 to 10 square them
-         Task Sum - take results from Square1 and Square2, apply reduction by addition and produce result
+* **Task Square1** - take numbers from 1 to 5, square them
+* **Task Square2** - take numbers from 6 to 10, square them
+* **Task Sum** - take results from Square1 and Square2, apply reduction by addition and produce result
+```
+Square1---→Sum
+Square2---↗
+```
 ```java
 public class SquareTheInputExecutable extends Executable {
     public SquareTheInputExecutable(String id) {
