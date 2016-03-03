@@ -1,7 +1,6 @@
 package com.atanasovski.dagscheduler.examples;
 
 import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.Scheduler;
 
 import java.util.List;
 
@@ -11,13 +10,13 @@ import java.util.List;
 public class CheckCredentialsForUser extends Executable {
     public static final String USER_NAME = "user_name";
 
-    public CheckCredentialsForUser(Scheduler scheduler, String id) {
-        super(scheduler, id);
+    public CheckCredentialsForUser(String id) {
+        super(id);
     }
 
     @Override
     public void execute() {
-        List<Object> input = this.get(USER_NAME);
+        List<? extends Object> input = this.get(USER_NAME);
         if (input == null || input.size() != 1) {
             error("wrong input");
         }

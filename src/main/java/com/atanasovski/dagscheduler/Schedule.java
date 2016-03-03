@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Created by Blagoj on 02-Mar-16.
  */
-public class Schedule {
+public abstract class Schedule {
     private ConcurrentMap<Executable, Set<Executable>> taskToDependencies = new ConcurrentHashMap<>();
     private boolean hasErrors = false;
     private Set<Executable> runningTasks = new HashSet<>();
@@ -18,18 +18,21 @@ public class Schedule {
         return this.results;
     }
 
-    public void add(Executable exe) {
+    public Schedule add(Executable exe) {
         if (!taskToDependencies.containsKey(exe)) {
             taskToDependencies.put(exe, new HashSet<>());
         }
+
+        return this;
     }
 
-    public void add(Executable exe, Executable... dependencies) {
+    public Schedule add(Executable exe, Executable... dependencies) {
         if (!taskToDependencies.containsKey(exe)) {
             taskToDependencies.put(exe, new HashSet<>());
         }
 
         taskToDependencies.get(exe).addAll(Arrays.asList(dependencies));
+        return this;
     }
 
     public synchronized boolean isDone() {
@@ -66,7 +69,7 @@ public class Schedule {
         this.taskToDependencies.entrySet().stream().forEach(entry -> {
             boolean removed = entry.getValue().remove(task);
             if (removed) {
-                entry.getKey().addInputParameters(outputParameters);
+                entry.getKey().addInput(outputParameters);
             }
         });
 
@@ -95,4 +98,5 @@ public class Schedule {
     public List<String> getErrors() {
         return this.errors;
     }
+
 }

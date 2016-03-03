@@ -12,8 +12,7 @@ public abstract class Executable implements Runnable {
     private Scheduler scheduler;
     private List<String> errors = new LinkedList<>();
 
-    public Executable(Scheduler scheduler, String id) {
-        this.scheduler = scheduler;
+    protected Executable(String id) {
         this.id = id;
     }
 
@@ -34,11 +33,11 @@ public abstract class Executable implements Runnable {
 
     public abstract void execute();
 
-    protected List<Object> get(String inputName) {
+    protected List<? extends Object> get(String inputName) {
         return inputParameters.get(inputName);
     }
 
-    protected final <T> void produce(String outputName, T result) {
+    protected final void produce(String outputName, Object result) {
         if (!outputParameters.containsKey(outputName)) {
             this.outputParameters.put(outputName, new LinkedList<>());
         }
@@ -67,6 +66,10 @@ public abstract class Executable implements Runnable {
 
     @Override
     public void run() {
+        if (this.scheduler == null) {
+            throw new IllegalStateException("Scheduler not set, can not execute");
+        }
+
         System.out.println("Starting exe: " + this.getId());
         this.errors.clear();
         this.execute();
@@ -78,7 +81,7 @@ public abstract class Executable implements Runnable {
         }
     }
 
-    public void addInputParameters(Map<String, List<? extends Object>> parameters) {
+    public Executable addInput(Map<String, List<Object>> parameters) {
         parameters.entrySet().forEach(entry -> {
             if (!this.inputParameters.containsKey(entry.getKey())) {
                 this.inputParameters.put(entry.getKey(), new LinkedList<>());
@@ -86,25 +89,34 @@ public abstract class Executable implements Runnable {
 
             this.inputParameters.get(entry.getKey()).addAll(entry.getValue());
         });
+
+        return this;
     }
 
-    public void addInputParameter(String parameterName, Object... values) {
+    public Executable addInput(String parameterName, Object... values) {
         if (!this.inputParameters.containsKey(parameterName)) {
             this.inputParameters.put(parameterName, new LinkedList<>());
         }
 
         this.inputParameters.get(parameterName).addAll(Arrays.asList(values));
+        return this;
     }
 
-    public void addInputParameter(String parameterName, Collection<? extends Object> values) {
+    public Executable addInput(String parameterName, Collection<? extends Object> values) {
         if (!this.inputParameters.containsKey(parameterName)) {
             this.inputParameters.put(parameterName, new LinkedList<>());
         }
 
         this.inputParameters.get(parameterName).addAll(values);
+        return this;
     }
 
     public final List<String> getErrors() {
         return this.errors;
     }
+
+    public void setScheduler(Scheduler s) {
+        this.scheduler = s;
+    }
+
 }

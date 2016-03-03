@@ -18,14 +18,14 @@ public class LogInUserSchedule extends Schedule {
     public static final String Username = "username";
     public static final String Result = "result";
 
-    public LogInUserSchedule(Scheduler s, String userName) {
-        Executable cred = new CheckCredentialsForUser(s, "check credentials");
+    public LogInUserSchedule(String userName) {
+        Executable cred = new CheckCredentialsForUser("check credentials");
         Map<String, List<Object>> input = new HashMap<>();
         input.put(CheckCredentialsForUser.USER_NAME, Arrays.asList(userName));
-        cred.addInputParameters(input);
+        cred.addInput(input);
         this.add(cred);
-        Executable prep = new PrepareTemplate(s, "prepare template");
+        Executable prep = new PrepareTemplate("prepare template");
         this.add(prep);
-        this.add(new DisplayResult(s, "display result"), cred, prep);
+        this.add(new DisplayResult("display result"), cred, prep);
     }
 }

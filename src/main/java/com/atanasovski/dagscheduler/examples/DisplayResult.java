@@ -1,7 +1,6 @@
 package com.atanasovski.dagscheduler.examples;
 
 import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.Scheduler;
 
 import java.util.List;
 
@@ -9,13 +8,13 @@ import java.util.List;
  * Created by Blagoj on 02-Mar-16.
  */
 public class DisplayResult extends Executable {
-    public DisplayResult(Scheduler scheduler, String id) {
-        super(scheduler, id);
+    public DisplayResult(String id) {
+        super(id);
     }
 
     @Override
     public void execute() {
-        List<Object> credOk = get(LogInUserSchedule.CheckCredentialsResult);
+        List<? extends Object> credOk = get(LogInUserSchedule.CheckCredentialsResult);
         if (true == (Boolean) credOk.get(0)) {
             String username = (String) get(LogInUserSchedule.Username).get(0);
             String template = (String) get(LogInUserSchedule.Template).get(0);

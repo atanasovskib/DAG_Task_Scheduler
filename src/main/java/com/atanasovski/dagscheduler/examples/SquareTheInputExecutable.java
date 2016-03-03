@@ -1,7 +1,6 @@
 package com.atanasovski.dagscheduler.examples;
 
 import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.Scheduler;
 
 import java.util.List;
 
@@ -9,21 +8,17 @@ import java.util.List;
  * Created by Blagoj on 24-Feb-16.
  */
 public class SquareTheInputExecutable extends Executable {
-    public static String Input = "InputParametersName";
-
-    public SquareTheInputExecutable(Scheduler scheduler, String id) {
-        super(scheduler, id);
+    public SquareTheInputExecutable(String id) {
+        super(id);
     }
 
     @Override
     public void execute() {
-        List<Object> a = this.get(SquareTheInputExecutable.Input);
-        System.out.println("input params for " + getId() + ": " + a.toString());
-
+        List<? extends Object> a = this.get(SampleSchedule.Input_Square);
         a.stream().forEach(k -> {
             int aa = ((Integer) k).intValue();
             aa = aa * aa;
-            produce(SumTheInputExecutable.InputParametersName, aa);
+            produce(SampleSchedule.Result_Square, aa);
         });
     }
 }

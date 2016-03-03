@@ -49,6 +49,7 @@ public class Scheduler {
                         Executable chosen = this.algorithm.choose(readyTasks);
                         this.schedule.removeForExecution(chosen);
                         this.currentRunningTasks.incrementAndGet();
+                        chosen.setScheduler(this);
                         this.executor.execute(chosen);
                     }
                 } else {
@@ -61,7 +62,7 @@ public class Scheduler {
                         readyTasks.remove(chosen);
                         this.currentRunningTasks.incrementAndGet();
                         System.out.println("task start exe: " + chosen.getId());
-
+                        chosen.setScheduler(this);
                         this.executor.execute(chosen);
                     }
                 }
