@@ -156,3 +156,4 @@ public static void main(String... args){
 }
 ```
 ### Example - 3 Using a shared resource
+### Example - 4 Using different scheduling algorithms
