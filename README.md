@@ -3,10 +3,11 @@ A Java library for defining tasks that have directed acyclic dependencies and ex
 
 This is supposed to be a library that will allow a developer to quickly define executable tasks, define the dependencies between tasks. The library takes care of passing arguments between the tasks.
 
+The library also gives a way to easily define a resource that is supposed to be shared between multiple threads, providing the user with a mechanism to lock, modify and unlock the resource (See example 3)
+
 ## Current state
 1. Only one scheduling algorithm is implemented, selects the first of available tasks
 2. Performance of the scheduler has not been taken into consideration
-3. Not tested for concurrency errors, deadlocks or anything else
 
 ## Examples
 ### Example 1: 
