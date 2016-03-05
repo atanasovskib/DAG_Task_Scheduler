@@ -1,13 +1,12 @@
 package com.atanasovski.dagscheduler;
 
 import com.atanasovski.dagscheduler.algorithms.SchedulingAlgorithm;
+import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.graph.DefaultEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,7 +36,14 @@ public class Scheduler {
     }
 
     public void execute(Schedule schedule) {
-        this.executor = this.isBounded ? Executors.newFixedThreadPool(this.maxNumberOfConcurrentTasks) :
+        Objects.requireNonNull(schedule);
+        CycleDetector<Executable, DefaultEdge> cycleDetector = new CycleDetector<>(schedule.getDependencies());
+        if (cycleDetector.detectCycles()) {
+            throw new IllegalArgumentException("Schedule contains cyclic dependencies between executable tasks");
+        }
+
+        this.executor = this.isBounded ?
+                Executors.newFixedThreadPool(this.maxNumberOfConcurrentTasks) :
                 Executors.newCachedThreadPool();
         logger.info("Starting schedule execution");
         this.schedule = schedule;
@@ -49,6 +55,7 @@ public class Scheduler {
             logger.info("Schedule not done");
             synchronized (this) {
                 logger.info("Current running tasks");
+                // TODO: Blagoj, implement this like a proper programmer
                 if (this.isBounded) {
                     try {
                         if (!this.schedule.isDone()) {
@@ -103,9 +110,7 @@ public class Scheduler {
 
     public synchronized void notifyDone(Executable task) {
         logger.info("task done: {}", task.getId());
-        if (this.schedule == null) {
-            throw new IllegalStateException("no schedule is executing");
-        }
+        Objects.requireNonNull(this.schedule);
 
         this.currentRunningTasks.decrementAndGet();
         this.schedule.notifyDone(task);
@@ -115,10 +120,7 @@ public class Scheduler {
     }
 
     public synchronized void notifyError(List<String> errors) {
-        if (this.schedule == null) {
-            throw new IllegalStateException("no schedule is executing");
-        }
-
+        Objects.requireNonNull(this.schedule);
         this.schedule.notifyError(errors);
         logger.info("waking up");
         this.notifyAll();

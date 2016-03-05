@@ -1,4 +1,4 @@
-package com.atanasovski.dagscheduler.examples.example1;
+package com.atanasovski.dagscheduler.examples.login;
 
 import com.atanasovski.dagscheduler.Executable;
 import com.atanasovski.dagscheduler.Schedule;

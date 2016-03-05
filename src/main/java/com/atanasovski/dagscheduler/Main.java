@@ -1,7 +1,7 @@
 package com.atanasovski.dagscheduler;
 
 import com.atanasovski.dagscheduler.algorithms.HLFETSchedulingAlgorithm;
-import com.atanasovski.dagscheduler.examples.example2.SampleSchedule;
+import com.atanasovski.dagscheduler.examples.squareandreduce.SampleSchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
