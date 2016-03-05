@@ -32,26 +32,21 @@ public class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
                 .forEach(task -> dfs(graph, task));
-        allVertices.forEach(exe -> System.out.println(String.format("%s:%f", exe.getId(), exe.getExecutionWeight())));
     }
 
-    private float dfs(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
-        System.out.println("dfs for: " + current.getId());
+    private int dfs(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
         if (current.hasExecutionWeight()) {
-            System.out.println(current.getId() + " has weight: " + current.getExecutionWeight());
             return current.getExecutionWeight();
         }
 
         if (graph.outDegreeOf(current) == 0) {
-            System.out.println("current is leaf, weight: " + current.getExecutionTime());
             current.setExecutionWeight(current.getExecutionTime());
             return current.getExecutionWeight();
         } else {
             Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
-            Stream<Executable> neighbours = edges.stream().map(edge -> graph.getEdgeTarget(edge));
-            float maxWeightOfNeighbours = neighbours.map(next -> dfs(graph, next)).max(Float::compare).get();
-            float weightOfCurrent = current.getExecutionTime() + maxWeightOfNeighbours;
-            System.out.println("current is not leaf, weight: " + weightOfCurrent);
+            Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);
+            int maxWeightOfNeighbours = neighbours.map(next -> dfs(graph, next)).max(Integer::compare).get();
+            int weightOfCurrent = current.getExecutionTime() + maxWeightOfNeighbours;
             current.setExecutionWeight(weightOfCurrent);
             return weightOfCurrent;
         }

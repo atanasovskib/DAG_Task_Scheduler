@@ -52,19 +52,10 @@ public class Scheduler {
         }
 
         while (!this.schedule.isDone()) {
-            logger.info("Schedule not done");
+            logger.info("Schedule not done, more tasks to be scheduled or still executing");
             synchronized (this) {
-                logger.info("Current running tasks");
                 // TODO: Blagoj, implement this like a proper programmer
                 if (this.isBounded) {
-                    try {
-                        if (!this.schedule.isDone()) {
-                            logger.info("waiting: {}", Thread.currentThread().getName());
-                            this.wait();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                     while (currentRunningTasks.get() < maxNumberOfConcurrentTasks) {
                         Executable[] readyTasks = this.schedule.getReadyTasks();
                         Executable chosen = this.algorithm.choose(readyTasks);
@@ -76,12 +67,12 @@ public class Scheduler {
                 } else {
                     Set<Executable> readyTasks = new HashSet<>();
                     readyTasks.addAll(Arrays.asList(this.schedule.getReadyTasks()));
-                    logger.info("ready tasks: " + readyTasks.size());
+                    logger.info("Ready tasks: " + readyTasks.size());
                     while (!readyTasks.isEmpty()) {
                         Executable chosen = this.algorithm.choose(readyTasks.toArray(new Executable[readyTasks.size()]));
                         readyTasks.remove(chosen);
                         this.currentRunningTasks.incrementAndGet();
-                        logger.info("task start exe: {}", chosen.getId());
+                        logger.info("Starting task: {}", chosen.getId());
                         chosen.setScheduler(this);
                         this.schedule.setAsStarted(chosen);
                         this.executor.execute(chosen);
@@ -90,7 +81,7 @@ public class Scheduler {
 
                 if (!this.schedule.isDone()) {
                     try {
-                        logger.info("Waiting: {}", Thread.currentThread().getName());
+                        logger.info("Waiting called from: {}", Thread.currentThread().getName());
                         this.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -100,7 +91,7 @@ public class Scheduler {
 
         }
 
-        logger.info("execution done in scheduler");
+        logger.info("Execution done in scheduler");
         synchronized (this) {
             this.schedule = null;
         }
@@ -109,12 +100,10 @@ public class Scheduler {
     }
 
     public synchronized void notifyDone(Executable task) {
-        logger.info("task done: {}", task.getId());
         Objects.requireNonNull(this.schedule);
-
         this.currentRunningTasks.decrementAndGet();
         this.schedule.notifyDone(task);
-        logger.info("Waking up: {}", Thread.currentThread().getName());
+        logger.info("Waking up scheduler from: {}", Thread.currentThread().getName());
         this.notifyAll();
         logger.info("Task done: {}", task.getId());
     }
@@ -122,7 +111,7 @@ public class Scheduler {
     public synchronized void notifyError(List<String> errors) {
         Objects.requireNonNull(this.schedule);
         this.schedule.notifyError(errors);
-        logger.info("waking up");
+        logger.info("Error in task {}, waking up scheduler", errors.toString());
         this.notifyAll();
 
     }
