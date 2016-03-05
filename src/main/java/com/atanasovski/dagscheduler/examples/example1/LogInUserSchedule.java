@@ -17,7 +17,7 @@ public class LogInUserSchedule extends Schedule {
                 .addInput(Username, userName);
         Executable prep = new PrepareTemplate("prepare template");
         this.add(cred)
-            .add(prep)
-            .add(new DisplayResult("display result"), cred, prep);
+                .add(prep)
+                .add(new DisplayResult("display result"), cred, prep);
     }
 }

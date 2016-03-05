@@ -1,16 +1,35 @@
 package com.atanasovski.dagscheduler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 /**
  * Created by Blagoj on 24-Feb-16.
  */
 public abstract class Executable implements Runnable {
+    private final Logger logger = LoggerFactory.getLogger(Executable.class);
     private final String id;
     private Map<String, List<Object>> inputParameters = new HashMap<>();
     private Map<String, List<Object>> outputParameters = new HashMap<>();
     private Scheduler scheduler;
     private List<String> errors = new LinkedList<>();
+    private float executionWeight = -1;
+    private float executionTime = 0;
+
+    public void setExecutionWeight(float weight) {
+        this.executionWeight = weight;
+    }
+
+    public float getWeight() {
+        return this.executionWeight;
+    }
+
+    protected Executable(String id, float executionTimeEstimate) {
+        this.id = id;
+        this.executionTime = executionTimeEstimate;
+    }
 
     protected Executable(String id) {
         this.id = id;
@@ -66,14 +85,12 @@ public abstract class Executable implements Runnable {
 
     @Override
     public void run() {
-        if (this.scheduler == null) {
-            throw new IllegalStateException("Scheduler not set, can not execute");
-        }
+        Objects.requireNonNull(this.scheduler, "Scheduler not set, can not execute");
 
-        System.out.println("Starting exe: " + this.getId());
+        logger.info("Starting exe: {}", this.getId());
         this.errors.clear();
         this.execute();
-        System.out.println("Done exe: " + this.getId());
+        logger.info("Done exe: {}", this.getId());
         if (this.errors.isEmpty()) {
             this.scheduler.notifyDone(this);
         } else {
@@ -119,4 +136,15 @@ public abstract class Executable implements Runnable {
         this.scheduler = s;
     }
 
+    public float getExecutionTime() {
+        return executionTime;
+    }
+
+    public float getExecutionWeight() {
+        return executionWeight;
+    }
+
+    public boolean hasExecutionWeight() {
+        return this.executionWeight != -1;
+    }
 }

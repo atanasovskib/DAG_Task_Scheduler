@@ -8,8 +8,8 @@ import java.util.List;
  * Created by Blagoj on 24-Feb-16.
  */
 public class SquareEach extends Executable {
-    public SquareEach(String id) {
-        super(id);
+    public SquareEach(String id, int numberOfInputElements) {
+        super(id, numberOfInputElements);
     }
 
     @Override

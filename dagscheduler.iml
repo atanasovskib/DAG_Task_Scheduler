@@ -18,6 +18,6 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.18" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.18" level="project" />
-    <orderEntry type="library" name="Gradle: org.slf4j:log4j-over-slf4j:1.7.18" level="project" />
+    <orderEntry type="library" name="Gradle: org.jgrapht:jgrapht-core:0.9.1" level="project" />
   </component>
 </module>

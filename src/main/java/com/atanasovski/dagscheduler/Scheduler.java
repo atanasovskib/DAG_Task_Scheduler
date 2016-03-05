@@ -1,5 +1,6 @@
 package com.atanasovski.dagscheduler;
 
+import com.atanasovski.dagscheduler.algorithms.SchedulingAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +39,16 @@ public class Scheduler {
     public void execute(Schedule schedule) {
         this.executor = this.isBounded ? Executors.newFixedThreadPool(this.maxNumberOfConcurrentTasks) :
                 Executors.newCachedThreadPool();
-        logger.info("starting schedule execution");
-        synchronized (this) {
-            this.schedule = schedule;
+        logger.info("Starting schedule execution");
+        this.schedule = schedule;
+        if (this.algorithm.usesPriority()) {
+            this.algorithm.calculatePriorities(this.schedule);
         }
 
         while (!this.schedule.isDone()) {
-            logger.info("schedule not done");
+            logger.info("Schedule not done");
             synchronized (this) {
-                logger.info("current running tasks");
+                logger.info("Current running tasks");
                 if (this.isBounded) {
                     try {
                         if (!this.schedule.isDone()) {
@@ -59,9 +61,9 @@ public class Scheduler {
                     while (currentRunningTasks.get() < maxNumberOfConcurrentTasks) {
                         Executable[] readyTasks = this.schedule.getReadyTasks();
                         Executable chosen = this.algorithm.choose(readyTasks);
-                        this.schedule.removeForExecution(chosen);
                         this.currentRunningTasks.incrementAndGet();
                         chosen.setScheduler(this);
+                        this.schedule.setAsStarted(chosen);
                         this.executor.execute(chosen);
                     }
                 } else {
@@ -70,11 +72,11 @@ public class Scheduler {
                     logger.info("ready tasks: " + readyTasks.size());
                     while (!readyTasks.isEmpty()) {
                         Executable chosen = this.algorithm.choose(readyTasks.toArray(new Executable[readyTasks.size()]));
-                        this.schedule.removeForExecution(chosen);
                         readyTasks.remove(chosen);
                         this.currentRunningTasks.incrementAndGet();
                         logger.info("task start exe: {}", chosen.getId());
                         chosen.setScheduler(this);
+                        this.schedule.setAsStarted(chosen);
                         this.executor.execute(chosen);
                     }
                 }
@@ -95,7 +97,7 @@ public class Scheduler {
         synchronized (this) {
             this.schedule = null;
         }
-        
+
         this.executor.shutdown();
     }
 
@@ -107,9 +109,9 @@ public class Scheduler {
 
         this.currentRunningTasks.decrementAndGet();
         this.schedule.notifyDone(task);
-        logger.info("waking up: {}", Thread.currentThread().getName());
+        logger.info("Waking up: {}", Thread.currentThread().getName());
         this.notifyAll();
-        logger.info("task done: {}", task.getId());
+        logger.info("Task done: {}", task.getId());
     }
 
     public synchronized void notifyError(List<String> errors) {

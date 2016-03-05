@@ -8,8 +8,8 @@ import java.util.List;
  * Created by Blagoj on 24-Feb-16.
  */
 public class ReduceWithSum extends Executable {
-    public ReduceWithSum(String id) {
-        super(id);
+    public ReduceWithSum(String id, int numberOfElements) {
+        super(id, numberOfElements);
     }
 
     @Override

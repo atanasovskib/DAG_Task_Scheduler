@@ -8,7 +8,6 @@ import java.util.List;
  * Created by Blagoj on 02-Mar-16.
  */
 public class CheckCredentialsForUser extends Executable {
-    public static final String USER_NAME = "user_name";
 
     public CheckCredentialsForUser(String id) {
         super(id);
@@ -16,7 +15,7 @@ public class CheckCredentialsForUser extends Executable {
 
     @Override
     public void execute() {
-        List<? extends Object> input = this.get(USER_NAME);
+        List<? extends Object> input = this.get(LogInUserSchedule.Username);
         if (input == null || input.size() != 1) {
             error("wrong input");
         }

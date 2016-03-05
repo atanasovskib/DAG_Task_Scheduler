@@ -58,7 +58,7 @@ public class SharedResource<T> {
         throw new IllegalAccessException("Resource was locked by another thread");
     }
 
-    public <Result> ResourceOperation<Result> createOperation(Function<T, Result> operation) {
+    public <Result> ResourceOperation<Result> createSafeGet(Function<T, Result> operation) {
         if (operation == null) {
             throw new IllegalArgumentException("operation must not be null");
         }

@@ -22,7 +22,7 @@ class IdGenerator {
     SharedResource<Integer> serial = new SharedResource<>(0);
 
     public int generate() throws IllegalAccessException, InterruptedException {
-        SharedResource<Integer>.ResourceOperation<Integer> getter = serial.createOperation(Function.identity());
+        SharedResource<Integer>.ResourceOperation<Integer> getter = serial.createSafeGet(Function.identity());
         serial.lock();
         int newId = getter.getResult();
         serial.set(newId + 1).unlock();
