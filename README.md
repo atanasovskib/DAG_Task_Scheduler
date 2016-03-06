@@ -211,7 +211,7 @@ public static void main(String... args) throws InterruptedException {
 }
 ```
 ### Example - 4 Using different scheduling algorithms
-####The schedule with the tasks and the dependencies between them, the numbers in the parenthesis are the execution time estimates for each of the nodes:
+The schedule with the tasks and the dependencies between them, the numbers in the parenthesis are the execution time estimates for each of the nodes:
 ```
 b(4) ---> c(3)----->e(1)
 a(2)------↑--->d(8)--->f(1)
