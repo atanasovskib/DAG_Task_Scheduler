@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory;
  */
 public class LongerSchedule extends Schedule {
     public LongerSchedule() {
-        A a = new A("a", 4);
-        A b = new A("b", 2);
+        A a = new A("a", 2);
+        A b = new A("b", 4);
         A c = new A("c", 3);
         A d = new A("d", 8);
         A e = new A("e", 1);
         A f = new A("f", 1);
-        this.add(a).add(b).add(c, a, b).add(d, b).add(e, c).add(f, d);
+        this.add(a).add(b).add(c, a, b).add(d, a).add(e, c).add(f, d);
     }
 }
 

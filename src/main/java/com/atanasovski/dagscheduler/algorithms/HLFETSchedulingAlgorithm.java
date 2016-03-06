@@ -16,7 +16,7 @@ public class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
     @Override
     public Executable choose(Executable... readyTasks) {
         return Arrays.stream(readyTasks)
-                .max((t1, t2) -> Float.compare(t1.getWeight(), t2.getWeight())).get();
+                .max((t1, t2) -> Float.compare(t1.getExecutionWeight(), t2.getExecutionWeight())).get();
     }
 
     @Override
@@ -36,12 +36,12 @@ public class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
 
     private int dfs(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
         if (current.hasExecutionWeight()) {
-            return current.getExecutionWeight();
+            return (int) current.getExecutionWeight();
         }
 
         if (graph.outDegreeOf(current) == 0) {
             current.setExecutionWeight(current.getExecutionTime());
-            return current.getExecutionWeight();
+            return (int) current.getExecutionWeight();
         } else {
             Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
             Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);

@@ -12,8 +12,8 @@ public class Main {
     static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) throws InterruptedException {
-        Scheduler s = new Scheduler(new MCPSchedulingAlgorithm(), 1);
         Schedule schedule = new LongerSchedule();
+        Scheduler s = new Scheduler(new MCPSchedulingAlgorithm());
         s.execute(schedule);
         logger.info("Done!");
         logger.info(schedule.getResults().toString());

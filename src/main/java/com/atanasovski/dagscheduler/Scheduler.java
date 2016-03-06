@@ -58,6 +58,10 @@ public class Scheduler {
                 if (this.isBounded) {
                     while (currentRunningTasks.get() < maxNumberOfConcurrentTasks) {
                         Executable[] readyTasks = this.schedule.getReadyTasks();
+                        if (readyTasks.length == 0) {
+                            break;
+                        }
+
                         Executable chosen = this.algorithm.choose(readyTasks);
                         this.currentRunningTasks.incrementAndGet();
                         chosen.setScheduler(this);

@@ -16,8 +16,9 @@ import java.util.stream.Stream;
  */
 public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
     final Logger logger = LoggerFactory.getLogger(MCPSchedulingAlgorithm.class);
-
+    private Map<Executable, Integer> alapTimes = new HashMap<>();
     private Map<Executable, List<Integer>> alapLists = new HashMap<>();
+    private int minAlap = Integer.MAX_VALUE;
 
     @Override
     public Executable choose(final Executable... readyTasks) {
@@ -47,32 +48,41 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
 
     @Override
     public void calculatePriorities(final Schedule schedule) {
-        final DefaultDirectedGraph<Executable, DefaultEdge> graph = schedule.getDependencies();
+        calculateAlap(schedule.getDependencies());
+        schedule.getDependencies().vertexSet().forEach(exe -> createALAPListForAllNodes(schedule.getDependencies(), exe));
+    }
+
+    private void calculateAlap(final DefaultDirectedGraph<Executable, DefaultEdge> graph) {
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
-                .forEach(task -> calculateALAP(graph, task));
-        allVertices.stream().forEach(exe -> createALAPListForAllNodes(graph, exe));
+                .forEach(task -> alapFromOneNode(graph, task));
+        int executionTime = -this.minAlap;
+        allVertices.forEach(exe -> this.alapTimes.put(exe, executionTime + this.alapTimes.get(exe)));
+        this.alapTimes.entrySet().forEach(entry -> System.out.println(entry.getKey().getId() + ": " + entry.getValue()));
     }
 
-    private int calculateALAP(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
-        if (current.hasExecutionWeight()) {
-            return current.getExecutionWeight();
+    private int alapFromOneNode(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+        if (this.alapTimes.containsKey(current)) {
+            return this.alapTimes.get(current);
         }
 
         if (graph.outDegreeOf(current) == 0) {
-            current.setExecutionWeight(current.getExecutionTime());
-            return current.getExecutionWeight();
+            int tmp = -current.getExecutionTime();
+            this.alapTimes.put(current, tmp);
+            this.minAlap = Math.min(tmp, this.minAlap);
+            return tmp;
         } else {
             Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
             Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);
-            int maxWeightOfNeighbours = neighbours.map(next -> calculateALAP(graph, next)).max(Integer::compare).get();
-            int weightOfCurrent = current.getExecutionTime() + maxWeightOfNeighbours;
-            current.setExecutionWeight(weightOfCurrent);
-            return weightOfCurrent;
+            int maxStartTimeOfNeighbours = neighbours.map(next -> alapFromOneNode(graph, next)).min(Integer::compare).get();
+            int maxStartTimeOfCurrent = -current.getExecutionTime() + maxStartTimeOfNeighbours;
+            this.minAlap = Math.min(maxStartTimeOfCurrent, this.minAlap);
+            this.alapTimes.put(current, maxStartTimeOfCurrent);
+            return maxStartTimeOfCurrent;
         }
-    }
 
+    }
 
     private List<Integer> createALAPListForAllNodes(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
         System.out.println("calculateALAP List for: " + current.getId());
@@ -82,9 +92,8 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         }
 
         if (graph.outDegreeOf(current) == 0) {
-            System.out.println("ALAP leaf:" + Collections.singletonList(current.getExecutionWeight()));
-            current.setExecutionWeight(current.getExecutionTime());
-            List<Integer> result = Collections.singletonList(current.getExecutionWeight());
+            System.out.println("ALAP leaf:" + Collections.singletonList(this.alapTimes.get(current)));
+            List<Integer> result = Collections.singletonList(this.alapTimes.get(current));
             alapLists.put(current, result);
             return result;
         } else {
@@ -94,10 +103,10 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
             neighbours.map(next -> createALAPListForAllNodes(graph, next))
                     .collect(Collectors.toList())
                     .forEach(result::addAll);
-            result.add(current.getExecutionWeight());
+            result.add(this.alapTimes.get(current));
             result.sort(Integer::compare);
             alapLists.put(current, result);
-            System.out.println("calculated ALAP for: " + current.getId() + "; " + result.toString());
+            System.out.println("Calculated ALAP for: " + current.getId() + "; " + result.toString());
             return result;
         }
     }

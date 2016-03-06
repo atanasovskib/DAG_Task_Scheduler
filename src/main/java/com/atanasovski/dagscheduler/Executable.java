@@ -15,15 +15,11 @@ public abstract class Executable implements Runnable {
     private Map<String, List<Object>> outputParameters = new HashMap<>();
     private Scheduler scheduler;
     private List<String> errors = new LinkedList<>();
-    private int executionWeight = -1;
+    private float executionWeight = -1;
     private int executionTime = 0;
 
-    public void setExecutionWeight(int weight) {
+    public void setExecutionWeight(float weight) {
         this.executionWeight = weight;
-    }
-
-    public float getWeight() {
-        return this.executionWeight;
     }
 
     protected Executable(String id, int executionTimeEstimate) {
@@ -140,7 +136,7 @@ public abstract class Executable implements Runnable {
         return executionTime;
     }
 
-    public int getExecutionWeight() {
+    public float getExecutionWeight() {
         return executionWeight;
     }
 
