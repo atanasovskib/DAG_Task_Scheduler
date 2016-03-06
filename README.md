@@ -211,3 +211,44 @@ public static void main(String... args) throws InterruptedException {
 }
 ```
 ### Example - 4 Using different scheduling algorithms
+####The schedule with the tasks and the dependencies between them, the numbers in the parenthesis are the execution time estimates for each of the nodes:
+```
+b(4) ---> c(3)----->e(1)
+a(2)------↑--->d(8)--->f(1)
+```
+```java
+public class LongerSchedule extends Schedule {
+    public LongerSchedule() {
+        T a = new T("a", 2);
+        T b = new T("b", 4);
+        T c = new T("c", 3);
+        T d = new T("d", 8);
+        T e = new T("e", 1);
+        T f = new T("f", 1);
+        this.add(a).add(b).add(c, a, b).add(d, a).add(e, c).add(f, d);
+    }
+}
+
+class T extends Executable {
+    final Logger logger = LoggerFactory.getLogger(T.class);
+
+    protected T(String id, int executionTimeEstimate) {
+        super(id, executionTimeEstimate);
+    }
+
+    @Override
+    public void execute() {
+        logger.info("Doing something in: {} for {} seconds", getId(), getExecutionTime());
+        Thread.sleep(getExecutionTime() * 1000);
+    }
+}
+
+void main(){
+    Schedule schedule = new LongerSchedule();
+    Scheduler s = new Scheduler(new MCPSchedulingAlgorithm());
+    s.execute(schedule);
+    Scheduler s1 = new Scheduler(new HLFETSchedulingAlgorithm());
+    s1.execute(schedule);
+    logger.info("Done!");
+}
+```
