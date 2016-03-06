@@ -6,8 +6,8 @@ This is supposed to be a library that will allow a developer to quickly define e
 The library also gives a way to easily define a resource that is supposed to be shared between multiple threads, providing the user with a mechanism to lock, modify and unlock the resource (See example 3)
 
 ## Current state
-1. Only one scheduling algorithm is implemented, selects the first of available tasks
-2. Performance of the scheduler has not been taken into consideration
+1. Performance of the scheduler has not been taken into consideration
+2. No tests exist
 
 ##Implemented algorithms
 * Wu, Min-You, and Daniel D. Gajski. "Hypertool: A programming aid for message-passing systems." IEEE Transactions on Parallel & Distributed Systems 3 (1990): 330-343.
@@ -28,12 +28,10 @@ The library also gives a way to easily define a resource that is supposed to be 
 
 
  The Modified Critical-Path (MCP) algorithm is designed based on an attribute called latest possible start time of a task (strand/node in the computation DAG). A task’s latest possible start time is determined through the as-late-as-possible (ALAP) binding, which is done by traversing the task graph upward from the exit nodes to the entry nodes and by pulling the nodes downwards as much as possible constrained by the length of the critical path (CP). The MCP algorithm first computes all the latest possible start times for all nodes. Then, each node is associated with a list of latest possible start times which consists of the latest possible start time of the node itself, followed by a decreasing order of the latest possible start times of its children nodes. The MCP algorithm then constructs a list of nodes in an increasing lexicographical order of the latest possible start times lists. At each scheduling step, the first node is removed from the list and scheduled to a processor that allows for the earliest start time. 
-
-
- Wu, Min-You, and Daniel D. Gajski. "Hypertool: A programming aid for message-passing systems." IEEE Transactions on Parallel & Distributed Systems 3 (1990): 330-343.
 4. Mobility Directed (MD) 
 
-The Mobility Directed (MD) algorithm selects a node at each step for scheduling based on an attribute called the relative mobility. Mobility of a node is defined as the difference between a node’s earliest start time and latest start time. Similar to the ALAP binding in MCP, the earliest possible start time is assigned to each node through the as-soon-as-possible (ASAP) binding which is done by traversing the task graph downward from the entry nodes to the exit nodes and by pulling the nodes upward as much as possible. Relative mobility is obtained by dividing the mobility with the node’s computation cost. Essentially, a node with zero mobility is a node on the CP. At each step, the MPD algorithm schedules the node with the smallest mobility to the first processor which has a large enough time slot to accommodate the node without considering the minimization of the node’s start time. After a node is scheduled, all the relative mobilities are updated.
+
+ The Mobility Directed (MD) algorithm selects a node at each step for scheduling based on an attribute called the relative mobility. Mobility of a node is defined as the difference between a node’s earliest start time and latest start time. Similar to the ALAP binding in MCP, the earliest possible start time is assigned to each node through the as-soon-as-possible (ASAP) binding which is done by traversing the task graph downward from the entry nodes to the exit nodes and by pulling the nodes upward as much as possible. Relative mobility is obtained by dividing the mobility with the node’s computation cost. Essentially, a node with zero mobility is a node on the CP. At each step, the MPD algorithm schedules the node with the smallest mobility to the first processor which has a large enough time slot to accommodate the node without considering the minimization of the node’s start time. After a node is scheduled, all the relative mobilities are updated.
 
 ## Examples
 ### Example 1: 
