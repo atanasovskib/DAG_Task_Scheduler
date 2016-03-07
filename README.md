@@ -8,7 +8,7 @@ The library also gives a way to easily define a resource that is supposed to be 
 ## Current state
 1. Performance of the scheduler has not been taken into consideration
 2. No tests exist
-
+##How to use
 ##Implemented algorithms
 * Wu, Min-You, and Daniel D. Gajski. "Hypertool: A programming aid for message-passing systems." IEEE Transactions on Parallel & Distributed Systems 3 (1990): 330-343.
 * Sih, Gilbert C., and Edward Lee. "A compile-time scheduling heuristic for interconnection-constrained heterogeneous processor architectures." Parallel and Distributed Systems, IEEE Transactions on 4.2 (1993): 175-187.
