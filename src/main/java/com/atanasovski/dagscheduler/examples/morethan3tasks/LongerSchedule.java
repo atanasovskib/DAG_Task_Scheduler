@@ -10,20 +10,20 @@ import org.slf4j.LoggerFactory;
  */
 public class LongerSchedule extends Schedule {
     public LongerSchedule() {
-        A a = new A("a", 2);
-        A b = new A("b", 4);
-        A c = new A("c", 3);
-        A d = new A("d", 8);
-        A e = new A("e", 1);
-        A f = new A("f", 1);
+        T a = new T("a", 2);
+        T b = new T("b", 4);
+        T c = new T("c", 3);
+        T d = new T("d", 8);
+        T e = new T("e", 1);
+        T f = new T("f", 1);
         this.add(a).add(b).add(c, a, b).add(d, a).add(e, c).add(f, d);
     }
 }
 
-class A extends Executable {
-    final Logger logger = LoggerFactory.getLogger(A.class);
+class T extends Executable {
+    final Logger logger = LoggerFactory.getLogger(T.class);
 
-    protected A(String id, int executionTimeEstimate) {
+    protected T(String id, int executionTimeEstimate) {
         super(id, executionTimeEstimate);
     }
 

@@ -1,5 +1,6 @@
 package com.atanasovski.dagscheduler;
 
+import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
  * Created by Blagoj on 02-Mar-16.
  */
 public abstract class Schedule {
-    private DefaultDirectedGraph<Executable, DefaultEdge> dependencies = new DefaultDirectedGraph<>(DefaultEdge.class);
+    private DirectedGraph<Executable, DefaultEdge> dependencies = new DefaultDirectedGraph<>(DefaultEdge.class);
     private boolean hasErrors = false;
     private ConcurrentMap<String, List<Object>> results = new ConcurrentHashMap<>();
     private List<String> errors = new LinkedList<>();
@@ -92,7 +93,7 @@ public abstract class Schedule {
         return this.errors;
     }
 
-    public DefaultDirectedGraph<Executable, DefaultEdge> getDependencies() {
+    public DirectedGraph<Executable, DefaultEdge> getDependencies() {
         return dependencies;
     }
 }

@@ -2,7 +2,7 @@ package com.atanasovski.dagscheduler.algorithms;
 
 import com.atanasovski.dagscheduler.Executable;
 import com.atanasovski.dagscheduler.Schedule;
-import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         this.minALAP = Integer.MAX_VALUE;
     }
 
-    private void calculateMD(DefaultDirectedGraph<Executable, DefaultEdge> dependencies) {
+    private void calculateMD(DirectedGraph<Executable, DefaultEdge> dependencies) {
         StringBuilder sb = new StringBuilder();
         dependencies.vertexSet().forEach(exe -> {
             float diff = this.alapTimes.get(exe) - this.asapTimes.get(exe);
@@ -75,7 +75,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         logger.info("MD: {}", sb.toString());
     }
 
-    private void calculateALAP(final DefaultDirectedGraph<Executable, DefaultEdge> graph) {
+    private void calculateALAP(final DirectedGraph<Executable, DefaultEdge> graph) {
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
@@ -84,7 +84,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         allVertices.forEach(exe -> this.alapTimes.put(exe, executionTime + this.alapTimes.get(exe)));
     }
 
-    private int alapFromOneNode(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+    private int alapFromOneNode(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
         if (this.alapTimes.containsKey(current)) {
             return this.alapTimes.get(current);
         }
@@ -106,14 +106,14 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
 
     }
 
-    private void calculateASAP(final DefaultDirectedGraph<Executable, DefaultEdge> graph) {
+    private void calculateASAP(final DirectedGraph<Executable, DefaultEdge> graph) {
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
                 .forEach(task -> calculateASAPFromOneNode(graph, task, 0));
     }
 
-    private void calculateASAPFromOneNode(final DefaultDirectedGraph<Executable, DefaultEdge> graph, Executable current, int startTime) {
+    private void calculateASAPFromOneNode(final DirectedGraph<Executable, DefaultEdge> graph, Executable current, int startTime) {
         if (this.asapTimes.containsKey(current)) {
             int min = Math.max(this.asapTimes.get(current), startTime);
             this.asapTimes.put(current, min);

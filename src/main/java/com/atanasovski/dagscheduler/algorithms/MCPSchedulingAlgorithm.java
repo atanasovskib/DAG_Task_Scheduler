@@ -2,7 +2,7 @@ package com.atanasovski.dagscheduler.algorithms;
 
 import com.atanasovski.dagscheduler.Executable;
 import com.atanasovski.dagscheduler.Schedule;
-import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         schedule.getDependencies().vertexSet().forEach(exe -> createALAPListForAllNodes(schedule.getDependencies(), exe));
     }
 
-    private void calculateAlap(final DefaultDirectedGraph<Executable, DefaultEdge> graph) {
+    private void calculateAlap(final DirectedGraph<Executable, DefaultEdge> graph) {
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
@@ -62,7 +62,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         this.alapTimes.entrySet().forEach(entry -> System.out.println(entry.getKey().getId() + ": " + entry.getValue()));
     }
 
-    private int alapFromOneNode(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+    private int alapFromOneNode(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
         if (this.alapTimes.containsKey(current)) {
             return this.alapTimes.get(current);
         }
@@ -84,7 +84,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
 
     }
 
-    private List<Integer> createALAPListForAllNodes(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+    private List<Integer> createALAPListForAllNodes(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
         System.out.println("calculateALAP List for: " + current.getId());
         if (alapLists.containsKey(current)) {
             System.out.println("result exists: " + alapLists.get(current));

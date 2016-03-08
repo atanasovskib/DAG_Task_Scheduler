@@ -2,7 +2,7 @@ package com.atanasovski.dagscheduler.algorithms;
 
 import com.atanasovski.dagscheduler.Executable;
 import com.atanasovski.dagscheduler.Schedule;
-import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 import java.util.Arrays;
@@ -27,14 +27,14 @@ public class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
 
     @Override
     public void calculatePriorities(final Schedule schedule) {
-        final DefaultDirectedGraph<Executable, DefaultEdge> graph = schedule.getDependencies();
+        final DirectedGraph<Executable, DefaultEdge> graph = schedule.getDependencies();
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
                 .forEach(task -> dfs(graph, task));
     }
 
-    private int dfs(final DefaultDirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+    private int dfs(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
         if (current.hasExecutionWeight()) {
             return (int) current.getExecutionWeight();
         }
