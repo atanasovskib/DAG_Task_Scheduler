@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Created by Blagoj on 02-Mar-16.
  */
-public abstract class Schedule {
+public class Schedule {
     private DirectedGraph<Executable, DefaultEdge> dependencies = new DefaultDirectedGraph<>(DefaultEdge.class);
     private boolean hasErrors = false;
     private ConcurrentMap<String, List<Object>> results = new ConcurrentHashMap<>();

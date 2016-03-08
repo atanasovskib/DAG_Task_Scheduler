@@ -2,7 +2,7 @@ group 'com.atanasovski'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
-
+apply plugin: 'idea'
 sourceCompatibility = 1.8
 
 repositories {
