@@ -6,8 +6,33 @@ This is supposed to be a library that will allow a developer to quickly define e
 The library also gives a way to easily define a resource that is supposed to be shared between multiple threads, providing the user with a mechanism to lock, modify and unlock the resource (See example 3)
 
 ## Current state
-1. Only one scheduling algorithm is implemented, selects the first of available tasks
-2. Performance of the scheduler has not been taken into consideration
+1. Performance of the scheduler has not been taken into consideration
+2. No tests exist
+
+##How to use
+##Implemented algorithms
+* Wu, Min-You, and Daniel D. Gajski. "Hypertool: A programming aid for message-passing systems." IEEE Transactions on Parallel & Distributed Systems 3 (1990): 330-343.
+* Sih, Gilbert C., and Edward Lee. "A compile-time scheduling heuristic for interconnection-constrained heterogeneous processor architectures." Parallel and Distributed Systems, IEEE Transactions on 4.2 (1993): 175-187.
+* Ahmad, Ishfaq, and Yu-Kwong Kwok. "A new approach to scheduling parallel programs using task duplication." Parallel Processing, 1994. ICPP 1994 Volume 2. International Conference on. Vol. 2. IEEE, 1994.
+* Kwok, Yu-Kwong, and Lshfaq Ahmad. "Dynamic critical-path scheduling: An effective technique for allocating task graphs to multiprocessors." Parallel and Distributed Systems, IEEE Transactions on 7.5 (1996): 506-521.
+
+
+1. DummySchedulingAlgorithm
+
+
+ Takes an array of ready tasks, schedules the first one
+2. Highest Levels First with Estimated Times (HLFET) 
+
+
+ This algorithm assigns each task/node in the computation DAG a level, or priority for scheduling. The level of node ni is defined as the largest sum of execution times along any directed path from ni to an end node of the graph, over all end nodes of the graph. Since these levels remain constant for the entire scheduling duration, we refer to these levels as being static, and denote the static level of a node ni as SL(ni). The list scheduling algorithm is then invoked using SL as priority measure.
+3. Modified Critical Path (MCP)
+
+
+ The Modified Critical-Path (MCP) algorithm is designed based on an attribute called latest possible start time of a task (strand/node in the computation DAG). A task’s latest possible start time is determined through the as-late-as-possible (ALAP) binding, which is done by traversing the task graph upward from the exit nodes to the entry nodes and by pulling the nodes downwards as much as possible constrained by the length of the critical path (CP). The MCP algorithm first computes all the latest possible start times for all nodes. Then, each node is associated with a list of latest possible start times which consists of the latest possible start time of the node itself, followed by a decreasing order of the latest possible start times of its children nodes. The MCP algorithm then constructs a list of nodes in an increasing lexicographical order of the latest possible start times lists. At each scheduling step, the first node is removed from the list and scheduled to a processor that allows for the earliest start time. 
+4. Mobility Directed (MD) 
+
+
+ The Mobility Directed (MD) algorithm selects a node at each step for scheduling based on an attribute called the relative mobility. Mobility of a node is defined as the difference between a node’s earliest start time and latest start time. Similar to the ALAP binding in MCP, the earliest possible start time is assigned to each node through the as-soon-as-possible (ASAP) binding which is done by traversing the task graph downward from the entry nodes to the exit nodes and by pulling the nodes upward as much as possible. Relative mobility is obtained by dividing the mobility with the node’s computation cost. Essentially, a node with zero mobility is a node on the CP. At each step, the MPD algorithm schedules the node with the smallest mobility to the first processor which has a large enough time slot to accommodate the node without considering the minimization of the node’s start time. After a node is scheduled, all the relative mobilities are updated.
 
 ## Examples
 ### Example 1: 
@@ -211,3 +236,44 @@ public static void main(String... args) throws InterruptedException {
 }
 ```
 ### Example - 4 Using different scheduling algorithms
+The schedule with the tasks and the dependencies between them, the numbers in the parenthesis are the execution time estimates for each of the nodes:
+```
+b(4) ---> c(3)----->e(1)
+a(2)------↑--->d(8)--->f(1)
+```
+```java
+public class LongerSchedule extends Schedule {
+    public LongerSchedule() {
+        T a = new T("a", 2);
+        T b = new T("b", 4);
+        T c = new T("c", 3);
+        T d = new T("d", 8);
+        T e = new T("e", 1);
+        T f = new T("f", 1);
+        this.add(a).add(b).add(c, a, b).add(d, a).add(e, c).add(f, d);
+    }
+}
+
+class T extends Executable {
+    final Logger logger = LoggerFactory.getLogger(T.class);
+
+    protected T(String id, int executionTimeEstimate) {
+        super(id, executionTimeEstimate);
+    }
+
+    @Override
+    public void execute() {
+        logger.info("Doing something in: {} for {} seconds", getId(), getExecutionTime());
+        Thread.sleep(getExecutionTime() * 1000);
+    }
+}
+
+void main(){
+    Schedule schedule = new LongerSchedule();
+    Scheduler s = new Scheduler(new MCPSchedulingAlgorithm());
+    s.execute(schedule);
+    Scheduler s1 = new Scheduler(new HLFETSchedulingAlgorithm());
+    s1.execute(schedule);
+    logger.info("Done!");
+}
+```
