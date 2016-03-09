@@ -75,11 +75,11 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         } else {
             Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
             Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);
-            int maxStartTimeOfNeighbours = neighbours.map(next -> alapFromOneNode(graph, next)).min(Integer::compare).get();
-            int maxStartTimeOfCurrent = -current.getExecutionTime() + maxStartTimeOfNeighbours;
-            this.minAlap = Math.min(maxStartTimeOfCurrent, this.minAlap);
-            this.alapTimes.put(current, maxStartTimeOfCurrent);
-            return maxStartTimeOfCurrent;
+            int minStartTimeOfNeighbours = neighbours.map(next -> alapFromOneNode(graph, next)).min(Integer::compare).get();
+            int minStartTimeOfCurrent = -current.getExecutionTime() + minStartTimeOfNeighbours;
+            this.minAlap = Math.min(minStartTimeOfCurrent, this.minAlap);
+            this.alapTimes.put(current, minStartTimeOfCurrent);
+            return minStartTimeOfCurrent;
         }
 
     }

@@ -1,7 +1,7 @@
 package com.atanasovski.dagscheduler;
 
-import com.atanasovski.dagscheduler.algorithms.MCPSchedulingAlgorithm;
-import com.atanasovski.dagscheduler.examples.morethan3tasks.LongerSchedule;
+import com.atanasovski.dagscheduler.algorithms.DummySchedulingAlgorithm;
+import com.atanasovski.dagscheduler.examples.login.LogInSchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,8 +12,8 @@ public class Main {
     static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) throws InterruptedException {
-        Schedule schedule = new LongerSchedule();
-        Scheduler s = new Scheduler(new MCPSchedulingAlgorithm());
+        Schedule schedule = new LogInSchedule("some user", "pass hash");
+        Scheduler s = new Scheduler(new DummySchedulingAlgorithm());
         s.execute(schedule);
         logger.info("Done!");
         logger.info(schedule.getResults().toString());

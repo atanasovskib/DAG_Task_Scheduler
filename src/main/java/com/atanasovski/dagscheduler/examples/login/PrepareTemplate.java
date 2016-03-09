@@ -12,15 +12,14 @@ public class PrepareTemplate extends Executable {
 
     @Override
     public void execute() {
-        //Simulate workload of reading file
+        //Simulate workload of creating html
+        String userName = (String) get("username").get(0);
         try {
-
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            error("work interrupted");
             e.printStackTrace();
         }
 
-        produce(LogInUserSchedule.Template, "<html>something something {insert_result_here}</html>");
+        produce("template", String.format("<html>something something %s</html>", userName));
     }
 }
