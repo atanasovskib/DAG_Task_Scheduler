@@ -10,6 +10,9 @@ The library also gives a way to easily define a resource that is supposed to be 
 2. No tests exist
 
 ##How to use
+
+A whitepaper with explanations, how to use examples, and complete example is found in the repo, you can acces it [here](https://github.com/delix/DAG_Task_Scheduler/blob/master/JavalibraryforimplementationandschedulingoftasksinadependencyDAG.pdf)
+
 ##Implemented algorithms
 * Wu, Min-You, and Daniel D. Gajski. "Hypertool: A programming aid for message-passing systems." IEEE Transactions on Parallel & Distributed Systems 3 (1990): 330-343.
 * Sih, Gilbert C., and Edward Lee. "A compile-time scheduling heuristic for interconnection-constrained heterogeneous processor architectures." Parallel and Distributed Systems, IEEE Transactions on 4.2 (1993): 175-187.
