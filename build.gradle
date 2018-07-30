@@ -1,5 +1,5 @@
-group 'com.atanasovski'
-version '1.0-SNAPSHOT'
+group = 'com.atanasovski'
+version = '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'idea'
@@ -27,5 +27,5 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.0'
+    gradleVersion = '4.9'
 }
