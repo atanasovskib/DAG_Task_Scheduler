@@ -5,9 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-/**
- * Created by Blagoj on 24-Feb-16.
- */
 public abstract class Executable implements Runnable {
     private final Logger logger = LoggerFactory.getLogger(Executable.class);
     private final String id;
@@ -95,12 +92,12 @@ public abstract class Executable implements Runnable {
     }
 
     public Executable addInput(Map<String, List<Object>> parameters) {
-        parameters.entrySet().forEach(entry -> {
-            if (!this.inputParameters.containsKey(entry.getKey())) {
-                this.inputParameters.put(entry.getKey(), new LinkedList<>());
+        parameters.forEach((key, value) -> {
+            if (!this.inputParameters.containsKey(key)) {
+                this.inputParameters.put(key, new LinkedList<>());
             }
 
-            this.inputParameters.get(entry.getKey()).addAll(entry.getValue());
+            this.inputParameters.get(key).addAll(value);
         });
 
         return this;
@@ -115,7 +112,7 @@ public abstract class Executable implements Runnable {
         return this;
     }
 
-    public Executable addInput(String parameterName, Collection<? extends Object> values) {
+    public Executable addInput(String parameterName, Collection<?> values) {
         if (!this.inputParameters.containsKey(parameterName)) {
             this.inputParameters.put(parameterName, new LinkedList<>());
         }

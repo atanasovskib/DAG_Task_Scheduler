@@ -8,18 +8,26 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- * Created by Blagoj on 02-Mar-16.
- */
 public class Schedule {
-    private DirectedGraph<Executable, DefaultEdge> dependencies = new DefaultDirectedGraph<>(DefaultEdge.class);
+    private final DirectedGraph<Executable, DefaultEdge> dependencies;
     private boolean hasErrors = false;
-    private ConcurrentMap<String, List<Object>> results = new ConcurrentHashMap<>();
-    private List<String> errors = new LinkedList<>();
-    private Set<Executable> runningTasks = new HashSet<>();
+    private final ConcurrentMap<String, List<Object>> results;
+    private final List<String> errors;
+    private final Set<Executable> runningTasks;
 
-    public ConcurrentMap<String, List<Object>> getResults() {
-        return this.results;
+    public Schedule(DirectedGraph<Executable, DefaultEdge> dependencies) {
+        this.dependencies = Objects.requireNonNull(dependencies);
+        this.results = new ConcurrentHashMap<>();
+        this.errors = new LinkedList<>();
+        this.runningTasks = new HashSet<>();
+    }
+
+    public static Schedule emptySchedule() {
+        return new Schedule(new DefaultDirectedGraph<>(DefaultEdge.class));
+    }
+
+    public Map<String, List<Object>> getResults() {
+        return Collections.unmodifiableMap(this.results);
     }
 
     public Schedule add(Executable dependentTask, Executable... dependsOn) {
@@ -42,7 +50,7 @@ public class Schedule {
     public synchronized Executable[] getReadyTasks() {
         return this.dependencies.vertexSet().stream()
                 .filter(task -> !this.runningTasks.contains(task) && this.dependencies.inDegreeOf(task) == 0)
-                .toArray(size -> new Executable[size]);
+                .toArray(Executable[]::new);
     }
 
     public synchronized void notifyDone(final Executable task) {
@@ -57,7 +65,7 @@ public class Schedule {
             dependenciesOfTask.stream().map(edge -> this.dependencies.getEdgeTarget(edge))
                     .forEach(dependant -> dependant.addInput(outputParameters));
         } else {
-            outputParameters.entrySet().stream().forEach(entry -> {
+            outputParameters.entrySet().forEach(entry -> {
                 if (!this.results.containsKey(entry.getKey())) {
                     this.results.put(entry.getKey(), new LinkedList<>());
                 }

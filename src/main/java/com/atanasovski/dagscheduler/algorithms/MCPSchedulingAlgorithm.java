@@ -33,8 +33,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         logger.info("choosing from: {}", readyAsList.toString());
         List<Executable> sorted = alapLists.entrySet().stream()
                 .filter(entry -> readyAsList.contains(entry.getKey()))
-                .sorted((x, y) ->
-                        x.getValue().toString().compareTo(y.getValue().toString()))
+                .sorted(Comparator.comparing(x -> x.getValue().toString()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
         logger.info("sorted: " + sorted.toString());
@@ -59,7 +58,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
                 .forEach(task -> alapFromOneNode(graph, task));
         int executionTime = -this.minAlap;
         allVertices.forEach(exe -> this.alapTimes.put(exe, executionTime + this.alapTimes.get(exe)));
-        this.alapTimes.entrySet().forEach(entry -> System.out.println(entry.getKey().getId() + ": " + entry.getValue()));
+        this.alapTimes.forEach((key, value) -> System.out.println(key.getId() + ": " + value));
     }
 
     private int alapFromOneNode(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {

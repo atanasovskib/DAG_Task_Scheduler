@@ -6,11 +6,8 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
-/**
- * Created by Blagoj on 29-Feb-16.
- */
 public class SharedResource<T> {
-    final Logger logger = LoggerFactory.getLogger(SharedResource.class);
+    private final Logger logger = LoggerFactory.getLogger(SharedResource.class);
     private T value;
     private ReentrantLock lock = new ReentrantLock();
 
@@ -63,8 +60,7 @@ public class SharedResource<T> {
             throw new IllegalArgumentException("operation must not be null");
         }
 
-        ResourceOperation ro = new ResourceOperation(this, operation);
-        return ro;
+        return new ResourceOperation<>(this, operation);
     }
 
     public class ResourceOperation<Result> {

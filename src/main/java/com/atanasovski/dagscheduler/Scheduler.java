@@ -11,9 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Created by Blagoj on 02-Mar-16.
- */
 public class Scheduler {
     private final Logger logger = LoggerFactory.getLogger(Scheduler.class);
     private final boolean isBounded;
