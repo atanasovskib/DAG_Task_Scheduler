@@ -1,5 +1,6 @@
-package com.atanasovski.dagscheduler;
+package com.atanasovski.dagscheduler.schedule;
 
+import com.atanasovski.dagscheduler.Executable;
 import com.atanasovski.dagscheduler.algorithms.SchedulingAlgorithm;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DefaultEdge;
@@ -82,7 +83,7 @@ public class Scheduler {
 
                 if (!this.schedule.isDone()) {
                     try {
-                        logger.info("Waiting called from: {}", Thread.currentThread().getName());
+                        logger.info("Waiting called ofTask: {}", Thread.currentThread().getName());
                         this.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -104,7 +105,7 @@ public class Scheduler {
         Objects.requireNonNull(this.schedule);
         this.currentRunningTasks.decrementAndGet();
         this.schedule.notifyDone(task);
-        logger.info("Waking up scheduler from: {}", Thread.currentThread().getName());
+        logger.info("Waking up scheduler ofTask: {}", Thread.currentThread().getName());
         this.notifyAll();
         logger.info("Task done: {}", task.getId());
     }

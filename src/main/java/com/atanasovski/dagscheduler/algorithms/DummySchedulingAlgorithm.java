@@ -1,7 +1,6 @@
 package com.atanasovski.dagscheduler.algorithms;
 
 import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.Schedule;
 
 public class DummySchedulingAlgorithm implements SchedulingAlgorithm {
     @Override

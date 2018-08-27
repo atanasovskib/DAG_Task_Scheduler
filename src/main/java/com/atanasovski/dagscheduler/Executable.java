@@ -1,5 +1,6 @@
 package com.atanasovski.dagscheduler;
 
+import com.atanasovski.dagscheduler.schedule.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

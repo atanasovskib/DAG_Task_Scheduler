@@ -1,7 +1,6 @@
 package com.atanasovski.dagscheduler.algorithms;
 
 import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.Schedule;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.slf4j.Logger;
@@ -32,7 +31,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         }
 
         this.calculatePriorities1(this.schedule);
-        logger.info("Choosing from: {}", Arrays.toString(readyTasks));
+        logger.info("Choosing ofTask: {}", Arrays.toString(readyTasks));
         Executable chosen = Arrays.stream(readyTasks).min((a, b) -> Float.compare(a.getExecutionWeight(), b.getExecutionWeight())).get();
         logger.info("Chosen: {}", chosen);
         return chosen;

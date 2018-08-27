@@ -1,7 +1,7 @@
 package com.atanasovski.dagscheduler.algorithms;
 
 import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.Schedule;
+import com.atanasovski.dagscheduler.schedule.Schedule;
 
 public interface SchedulingAlgorithm {
     Executable choose(Executable... readyTasks);

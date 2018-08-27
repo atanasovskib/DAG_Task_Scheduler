@@ -1,4 +1,4 @@
-package com.atanasovski.dagscheduler.version2;
+package com.atanasovski.dagscheduler.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,7 +1,6 @@
 package com.atanasovski.dagscheduler.algorithms;
 
 import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.Schedule;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.slf4j.Logger;
@@ -30,7 +29,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         }
 
         final List<Executable> readyAsList = Arrays.asList(readyTasks);
-        logger.info("choosing from: {}", readyAsList.toString());
+        logger.info("choosing ofTask: {}", readyAsList.toString());
         List<Executable> sorted = alapLists.entrySet().stream()
                 .filter(entry -> readyAsList.contains(entry.getKey()))
                 .sorted(Comparator.comparing(x -> x.getValue().toString()))

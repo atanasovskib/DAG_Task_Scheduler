@@ -1,9 +1,10 @@
-package com.atanasovski.dagscheduler.version2
+package com.atanasovski.dagscheduler.annotations
 
+import com.atanasovski.dagscheduler.tasks.Task
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static com.atanasovski.dagscheduler.version2.TaskBuilder.task
+import static com.atanasovski.dagscheduler.annotations.TaskBuilder.task
 
 class ScheduleBuilderImplTest extends Specification {
     def "duplicate taskIds are not allowed"() {
