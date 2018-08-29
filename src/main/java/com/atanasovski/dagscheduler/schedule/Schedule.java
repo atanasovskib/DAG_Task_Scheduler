@@ -5,7 +5,6 @@ import com.atanasovski.dagscheduler.tasks.FieldExtractor;
 import com.atanasovski.dagscheduler.tasks.Task;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import com.google.common.collect.Tables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,11 +33,10 @@ public class Schedule {
 
         this.taskInstances.forEach((key, value) -> this.taskScheduled.put(key, false));
         this.taskDependencies = new HashMap<>(taskDependencies);
-        Table<String, String, Boolean> satisfaction = HashBasedTable.create();
+        this.dependencySatisfaction = HashBasedTable.create();
         this.taskDependencies.forEach((inTaskId, dependencies) -> dependencies.forEach(
-                dep -> satisfaction.put(inTaskId, dep.outputTaskId(), false)));
+                dep -> this.dependencySatisfaction.put(inTaskId, dep.outputTaskId(), false)));
 
-        this.dependencySatisfaction = Tables.unmodifiableTable(satisfaction);
     }
 
     public synchronized List<Task> getReady() {
@@ -72,7 +70,7 @@ public class Schedule {
         Task inputTask = this.taskInstances.get(taskId);
         this.taskDependencies.get(taskId)
                 .stream()
-                .filter(dep -> dep.type() != DependencyType.ON_OUTPUT)
+                .filter(dep -> dep.type() == DependencyType.ON_OUTPUT)
                 .forEach(dep -> {
                     String inputArg = dep.inputArg().orElseThrow(this::invalidOutputDependency);
 

@@ -10,6 +10,6 @@ public class TaskDependencyInputBuilder {
     }
 
     public DependencyDescription asInput(String inputArgName) {
-        return new DependencyDescription(DependencyType.ON_OUTPUT, outputTaskId, outputArg, inputArgName);
+        return new DependencyDescription(DependencyType.ON_OUTPUT, inputArgName, outputTaskId, outputArg);
     }
 }

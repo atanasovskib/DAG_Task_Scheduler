@@ -78,7 +78,7 @@ public class ScheduleBuilder {
             }
 
             dependencyGraph.addEdge(newTaskId, dependeeTask);
-            if (dependencyTable.contains(newTaskId, dependeeTask)) {
+            if (!dependencyTable.contains(newTaskId, dependeeTask)) {
                 dependencyTable.put(newTaskId, dependeeTask, new LinkedList<>());
             }
 
@@ -120,7 +120,7 @@ public class ScheduleBuilder {
 
             return noArgConstructor.newInstance(taskId);
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-            logger.error("Construtor with only one string arg not found in [{}]", taskType.getName());
+            logger.error("A public construtor with only one string arg not found in [{}]", taskType.getName());
             throw new NoProperConstructorException(taskType);
         }
     }

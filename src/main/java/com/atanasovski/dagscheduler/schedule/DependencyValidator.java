@@ -44,7 +44,7 @@ public class DependencyValidator {
             return;
         }
 
-        if(!Modifier.isFinal(fieldModifiers)){
+        if (!Modifier.isFinal(fieldModifiers)) {
             return;
         }
 
@@ -59,6 +59,10 @@ public class DependencyValidator {
     }
 
     private void validateOutputParams(ProcessedDependency dependency) {
+        if (dependency.type() != DependencyType.ON_OUTPUT) {
+            return;
+        }
+
         Class<? extends Task> outputType = dependency.outputTaskType;
 
         String outputArg = dependency.outputArg()
