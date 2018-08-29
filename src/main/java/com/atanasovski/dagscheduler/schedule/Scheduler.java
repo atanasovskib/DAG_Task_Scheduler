@@ -1,120 +1,66 @@
 package com.atanasovski.dagscheduler.schedule;
 
-import com.atanasovski.dagscheduler.Executable;
-import com.atanasovski.dagscheduler.algorithms.SchedulingAlgorithm;
-import org.jgrapht.alg.CycleDetector;
-import org.jgrapht.graph.DefaultEdge;
+import com.atanasovski.dagscheduler.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 public class Scheduler {
-    private final Logger logger = LoggerFactory.getLogger(Scheduler.class);
-    private final boolean isBounded;
-    private SchedulingAlgorithm algorithm;
-    private Schedule schedule;
-    private final int maxNumberOfConcurrentTasks;
-    private AtomicInteger currentRunningTasks = new AtomicInteger(0);
-    private ExecutorService executor;
+    private final Logger log = LoggerFactory.getLogger(Scheduler.class);
 
-    public Scheduler(SchedulingAlgorithm algorithm) {
-        this.algorithm = algorithm;
-        this.isBounded = false;
-        this.maxNumberOfConcurrentTasks = -1;
-    }
+    private final ExecutorService schedulingExecutor;
+    private final ExecutorService taskExecutor;
+    private final Schedule schedule;
 
-    public Scheduler(SchedulingAlgorithm algorithm, int maxNumberOfConcurrentTasks) {
-        this.algorithm = algorithm;
-        this.maxNumberOfConcurrentTasks = maxNumberOfConcurrentTasks;
-        this.isBounded = true;
-    }
+    private AtomicBoolean alreadyStartedOnce = new AtomicBoolean(false);
 
-    public void execute(Schedule schedule) {
-        Objects.requireNonNull(schedule);
-        CycleDetector<Executable, DefaultEdge> cycleDetector = new CycleDetector<>(schedule.getDependencies());
-        if (cycleDetector.detectCycles()) {
-            throw new IllegalArgumentException("Schedule contains cyclic dependencies between executable tasks");
-        }
-
-        this.executor = this.isBounded ?
-                Executors.newFixedThreadPool(this.maxNumberOfConcurrentTasks) :
-                Executors.newCachedThreadPool();
-        logger.info("Starting schedule execution");
+    public Scheduler(Schedule schedule, int maxNumberOfExecutionThreads) {
         this.schedule = schedule;
-        if (this.algorithm.usesPriority()) {
-            this.algorithm.calculatePriorities(this.schedule);
-        }
-
-        while (!this.schedule.isDone()) {
-            logger.info("Schedule not done, more tasks to be scheduled or still executing");
-            synchronized (this) {
-                // TODO: Blagoj, implement this like a proper programmer
-                if (this.isBounded) {
-                    while (currentRunningTasks.get() < maxNumberOfConcurrentTasks) {
-                        Executable[] readyTasks = this.schedule.getReadyTasks();
-                        if (readyTasks.length == 0) {
-                            break;
-                        }
-
-                        Executable chosen = this.algorithm.choose(readyTasks);
-                        this.currentRunningTasks.incrementAndGet();
-                        chosen.setScheduler(this);
-                        this.schedule.setAsStarted(chosen);
-                        this.executor.execute(chosen);
-                    }
-                } else {
-                    Set<Executable> readyTasks = new HashSet<>();
-                    readyTasks.addAll(Arrays.asList(this.schedule.getReadyTasks()));
-                    logger.info("Ready tasks: " + readyTasks.size());
-                    while (!readyTasks.isEmpty()) {
-                        Executable chosen = this.algorithm.choose(readyTasks.toArray(new Executable[readyTasks.size()]));
-                        readyTasks.remove(chosen);
-                        this.currentRunningTasks.incrementAndGet();
-                        logger.info("Starting task: {}", chosen.getId());
-                        chosen.setScheduler(this);
-                        this.schedule.setAsStarted(chosen);
-                        this.executor.execute(chosen);
-                    }
-                }
-
-                if (!this.schedule.isDone()) {
-                    try {
-                        logger.info("Waiting called ofTask: {}", Thread.currentThread().getName());
-                        this.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-        }
-
-        logger.info("Execution done in scheduler");
-        synchronized (this) {
-            this.schedule = null;
-        }
-
-        this.executor.shutdown();
+        this.schedulingExecutor = Executors.newSingleThreadExecutor();
+        this.taskExecutor = Executors.newFixedThreadPool(maxNumberOfExecutionThreads);
     }
 
-    public synchronized void notifyDone(Executable task) {
-        Objects.requireNonNull(this.schedule);
-        this.currentRunningTasks.decrementAndGet();
-        this.schedule.notifyDone(task);
-        logger.info("Waking up scheduler ofTask: {}", Thread.currentThread().getName());
-        this.notifyAll();
-        logger.info("Task done: {}", task.getId());
+    public void start() {
+        log.debug("Starting to execute schedule");
+        boolean alreadyStarted = this.alreadyStartedOnce.getAndSet(true);
+        if (alreadyStarted) {
+            throw new IllegalStateException("Scheduler has already executed it's schedule");
+        }
+
+        this.schedulingExecutor.execute(this::checkForReadyTasks);
     }
 
-    public synchronized void notifyError(List<String> errors) {
-        Objects.requireNonNull(this.schedule);
-        this.schedule.notifyError(errors);
-        logger.info("Error in task {}, waking up scheduler", errors.toString());
-        this.notifyAll();
 
+    private void checkForReadyTasks() {
+        List<Task> readyTasks = this.schedule.getReady();
+        log.debug("Found [{}] ready tasks", readyTasks.size());
+        readyTasks.forEach(this::scheduleReadyTask);
+    }
+
+    private void scheduleReadyTask(Task task) {
+        this.schedule.setRunning(task.taskId);
+        CompletableFuture.supplyAsync(this.executeTask(task), this.taskExecutor)
+                .thenAcceptAsync(this::notifyTaskComplete, this.schedulingExecutor)
+                .thenRunAsync(this::checkForReadyTasks, this.schedulingExecutor);
+    }
+
+    private Supplier<String> executeTask(Task readyTask) {
+        return () -> {
+            log.debug("Starting task execution", readyTask.taskId);
+            readyTask.compute();
+            log.debug("Ending task [{}] execution", readyTask.taskId);
+            return readyTask.taskId;
+        };
+    }
+
+    private void notifyTaskComplete(String completeTask) {
+        log.debug("Notifying that task is complete [{}]", completeTask);
+        this.schedule.onTaskComplete(completeTask);
     }
 }

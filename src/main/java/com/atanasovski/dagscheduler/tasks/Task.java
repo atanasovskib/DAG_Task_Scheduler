@@ -1,8 +1,21 @@
 package com.atanasovski.dagscheduler.tasks;
 
-import com.atanasovski.dagscheduler.ExecutionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public interface Task {
+import java.util.Objects;
 
-    ExecutionStatus compute();
+public abstract class Task {
+    public final String taskId;
+    private final Logger log = LoggerFactory.getLogger(Task.class);
+
+    public Task(String taskId) {
+        log.debug("Created a new Task instance. Id: [{}]", taskId);
+        this.taskId = Objects.requireNonNull(taskId);
+        if (taskId.isEmpty()) {
+            throw new IllegalArgumentException("Task Id can't be an empty string");
+        }
+    }
+
+    public abstract void compute();
 }

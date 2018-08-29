@@ -1,37 +1,54 @@
 package com.atanasovski.dagscheduler.schedule;
 
 import com.atanasovski.dagscheduler.ValidationResult;
-import com.atanasovski.dagscheduler.tasks.Task;
 import com.atanasovski.dagscheduler.annotations.TaskInput;
-import com.atanasovski.dagscheduler.annotations.TaskOutput;
 import com.atanasovski.dagscheduler.dependencies.DependencyType;
+import com.atanasovski.dagscheduler.tasks.FieldExtractor;
+import com.atanasovski.dagscheduler.tasks.Task;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DependencyValidator {
+    private final FieldExtractor fieldExtractor;
+
+    public DependencyValidator(FieldExtractor fieldExtractor) {
+        this.fieldExtractor = Objects.requireNonNull(fieldExtractor);
+    }
+
+    public DependencyValidator() {
+        this.fieldExtractor = new FieldExtractor();
+    }
+
     public <T extends Task> void validate(Class<T> taskType, List<ProcessedDependency> dependencies) {
-        Map<String, ProcessedDependency> outputDependencies;
-        outputDependencies = extractOutputDependencies(dependencies)
-                                     .orElseThrow(() -> {
-                                         String errorMessage = "There are multiple output dependencies specified " +
-                                                                       "for the same input argument";
-                                         return new InputDependencyException(errorMessage);
-                                     });
+        Map<String, ProcessedDependency> outputDependencies = extractOutputDependencies(dependencies);
 
 
         inputFields(taskType)
-                .forEach(this.validateByName(outputDependencies));
+                .stream()
+                .peek(this.validateByName(outputDependencies))
+                .peek(this.validateByType(outputDependencies))
+                .forEach(this::validateAccessibility);
 
-        dependencies.forEach(this::validateOutputParamNames);
+        dependencies.forEach(this::validateOutputParams);
+    }
 
-        inputFields(taskType).stream()
-                .forEach(this.validateByType(outputDependencies));
+    private void validateAccessibility(Field field) {
+        final int fieldModifiers = field.getModifiers();
+        if (Modifier.isPublic(fieldModifiers)) {
+            return;
+        }
+
+        if(!Modifier.isFinal(fieldModifiers)){
+            return;
+        }
+
+        throw new InputDependencyException("Field annotated with @TaskInput or @TaskOutput must be public and not final");
     }
 
     private List<Field> inputFields(Class taskType) {
@@ -41,25 +58,22 @@ public class DependencyValidator {
                        .collect(Collectors.toList());
     }
 
-    private void validateOutputParamNames(ProcessedDependency dependency) {
-        String outputArg = dependency.dependency.outputArg().get();
-        Class outputType = dependency.outputTaskType;
+    private void validateOutputParams(ProcessedDependency dependency) {
+        Class<? extends Task> outputType = dependency.outputTaskType;
 
-        Predicate<Field> fieldIsRequiredOutputParam;
-        fieldIsRequiredOutputParam = field -> Optional.ofNullable(field.getAnnotation(TaskOutput.class))
-                                                      .map(annot -> annot.outputName().equals(outputArg))
-                                                      .orElse(false);
+        String outputArg = dependency.outputArg()
+                                   .orElseThrow(this::expectedOutputDependency);
 
-        Arrays.stream(outputType.getFields())
-                .filter(fieldIsRequiredOutputParam)
-                .findAny()
-                .orElseThrow(() -> {
-                    String validationError = String.format(
-                            "In class [%s] no field was marked as TaskOutput with name [%s]",
-                            dependency.outputTaskType.getName(),
-                            outputArg);
-                    return new InputDependencyException(validationError);
-                });
+        Field outputField = fieldExtractor.getOutputField(outputType, outputArg)
+                                    .orElseThrow(() -> {
+                                        String validationError = String.format(
+                                                "In class [%s] no field was marked as TaskOutput named [%s]",
+                                                dependency.outputTaskType.getName(),
+                                                outputArg);
+                                        return new InputDependencyException(validationError);
+                                    });
+
+        this.validateAccessibility(outputField);
     }
 
     private Consumer<Field> validateByType(Map<String, ProcessedDependency> dependenciesByInputArg) {
@@ -68,12 +82,18 @@ public class DependencyValidator {
             String paramName = inputDesc.paramName();
 
             ProcessedDependency dependency = dependenciesByInputArg.get(paramName);
-            Class outputTaskType = dependency.outputTaskType;
-            String outputArgName = dependency.dependency.outputArg().get();
-            Optional<Field> outputField = outputParamField(outputTaskType, outputArgName);
+            Class<? extends Task> outputTaskType = dependency.outputTaskType;
+            String outputArgName = dependency.outputArg()
+                                           .orElseThrow(this::expectedOutputDependency);
+
+            Optional<Field> outputField = fieldExtractor.getOutputField(outputTaskType, outputArgName);
             outputField.map(compareTypes(inputField))
                     .orElseThrow(outputFieldDoesNotExist(outputTaskType, outputArgName));
         };
+    }
+
+    private InputDependencyException expectedOutputDependency() {
+        return new InputDependencyException("Expected output dependency");
     }
 
     private Supplier<InputDependencyException> outputFieldDoesNotExist(Class outputTaskType, String outputArgName) {
@@ -104,16 +124,6 @@ public class DependencyValidator {
         return ValidationResult.error(errorMessage);
     }
 
-    private Optional<Field> outputParamField(Class taskType, String outputArgName) {
-        Predicate<Field> outArgNameIsRequested = field -> Optional.ofNullable(field.getAnnotation(TaskOutput.class))
-                                                                  .map(annot -> annot.outputName().equals(outputArgName))
-                                                                  .orElse(false);
-
-        return Arrays.stream(taskType.getFields())
-                       .filter(outArgNameIsRequested)
-                       .findAny();
-    }
-
     private Consumer<Field> validateByName(Map<String, ProcessedDependency> dependencies) {
         return field -> {
             TaskInput inputDesc = field.getAnnotation(TaskInput.class);
@@ -127,7 +137,7 @@ public class DependencyValidator {
         };
     }
 
-    private Optional<Map<String, ProcessedDependency>> extractOutputDependencies(List<ProcessedDependency> dependencies) {
+    private Map<String, ProcessedDependency> extractOutputDependencies(List<ProcessedDependency> dependencies) {
         Map<String, List<ProcessedDependency>> x = dependencies.stream()
                                                            .filter(dep -> dep.type() == DependencyType.ON_OUTPUT)
                                                            .collect(Collectors.groupingBy(this::getInputArg));
@@ -135,13 +145,15 @@ public class DependencyValidator {
         for (String inputArg : x.keySet()) {
             List<ProcessedDependency> dependenciesForInputArg = x.get(inputArg);
             if (dependenciesForInputArg.size() != 1) {
-                return Optional.empty();
+                String errorMessage = "There are multiple output dependencies specified " +
+                                              "for the same input argument";
+                throw new InputDependencyException(errorMessage);
             }
 
             toReturn.put(inputArg, dependenciesForInputArg.get(0));
         }
 
-        return Optional.of(toReturn);
+        return toReturn;
     }
 
     private String getInputArg(ProcessedDependency dependency) {
