@@ -9,5 +9,5 @@ public interface SchedulingAlgorithm {
 
     boolean usesPriority();
 
-    Map<String, Long> calculatePriorities(Schedule schedule);
+    Map<String, Long> calculatePriorities(Schedule<String> schedule);
 }

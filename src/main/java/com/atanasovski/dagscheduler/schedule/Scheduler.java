@@ -8,25 +8,34 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-public class Scheduler {
+public class Scheduler<Output> {
     private final Logger log = LoggerFactory.getLogger(Scheduler.class);
 
     private final ExecutorService schedulingExecutor;
     private final ExecutorService taskExecutor;
-    private final Schedule schedule;
+    private final Schedule<Output> schedule;
+    private final CompletableFuture<Output> outputFuture;
 
     private AtomicBoolean alreadyStartedOnce = new AtomicBoolean(false);
 
-    public Scheduler(Schedule schedule, int maxNumberOfExecutionThreads) {
+    public Scheduler(Schedule<Output> schedule, int maxNumberOfExecutionThreads) {
         this.schedule = schedule;
         this.schedulingExecutor = Executors.newSingleThreadExecutor();
         this.taskExecutor = Executors.newFixedThreadPool(maxNumberOfExecutionThreads);
+        this.outputFuture = schedule.onComplete().thenApply(output -> {
+            this.taskExecutor.shutdown();
+            this.schedulingExecutor.shutdown();
+            return output;
+        });
+
     }
 
-    public void start() {
+    public Future<Output> start() {
+
         log.debug("Starting to execute schedule");
         boolean alreadyStarted = this.alreadyStartedOnce.getAndSet(true);
         if (alreadyStarted) {
@@ -34,6 +43,7 @@ public class Scheduler {
         }
 
         this.schedulingExecutor.execute(this::checkForReadyTasks);
+        return this.outputFuture;
     }
 
 

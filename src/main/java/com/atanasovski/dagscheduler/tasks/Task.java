@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public abstract class Task {
     public final String taskId;
-    private final Logger log = LoggerFactory.getLogger(Task.class);
+    private static final Logger log = LoggerFactory.getLogger(Task.class);
 
     public Task(String taskId) {
         log.debug("Created a new Task instance. Id: [{}]", taskId);
