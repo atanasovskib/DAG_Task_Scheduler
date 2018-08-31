@@ -16,7 +16,6 @@ public abstract class Sink<T> extends Task {
 
     @Override
     public void compute() {
-        System.out.println("Before completing future");
         future.complete(getResult());
     }
 }

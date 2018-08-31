@@ -39,7 +39,7 @@ public class Scheduler<Output> {
         log.debug("Starting to execute schedule");
         boolean alreadyStarted = this.alreadyStartedOnce.getAndSet(true);
         if (alreadyStarted) {
-            throw new IllegalStateException("Scheduler has already executed it's schedule");
+            throw new IllegalStateException("Scheduler has already executed");
         }
 
         this.schedulingExecutor.execute(this::checkForReadyTasks);
