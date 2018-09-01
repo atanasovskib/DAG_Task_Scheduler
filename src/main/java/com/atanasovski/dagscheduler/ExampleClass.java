@@ -57,9 +57,9 @@ public class ExampleClass extends Task {
         Future<String> result = scheduler.start();
         System.out.println("In main:" + result.get());
         Schedule<Void> schedule2 = ScheduleBuilder.startWith(task(ExampleClass.class).called("start"))
-                                           .add(task(TakeInputBrtOutput.class).called("printer").waitFor(
-                                                   theOutput("output").ofTask("start").asInput("input")
-                                           )).build();
+                                           .add(task(ErrorProducingTask.class).called("printer")
+                                                        .waitFor(theCompletionOf("start")))
+                                           .build();
         Scheduler<Void> scheduler1 = new Scheduler<>(schedule2, 1);
         scheduler1.start().get();
     }
