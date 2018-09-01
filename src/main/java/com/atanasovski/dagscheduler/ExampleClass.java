@@ -25,7 +25,6 @@ public class ExampleClass extends Task {
     }
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        ScheduleBuilder<String> scheduleBuilder;
         TaskDefinition<TakeInputBrtOutput> print1 = task(TakeInputBrtOutput.class).called("Print 1")
                                                             .waitFor(theOutput("output")
                                                                              .ofTask("Start")
@@ -48,18 +47,21 @@ public class ExampleClass extends Task {
                                                                               .ofTask("Start")
                                                                               .asInput("result"));
 
-        scheduleBuilder = ScheduleBuilder.<String>startWith(task(ExampleClass.class).called("Start"))
-                                  .add(print1)
-                                  .add(print2)
-                                  .add(print3)
-                                  .endWith(sinkTask);
+        Schedule<String> schedule = ScheduleBuilder.startWith(task(ExampleClass.class).called("Start"))
+                                            .add(print1)
+                                            .add(print2)
+                                            .add(print3)
+                                            .endWith(sinkTask);
 
-        Schedule<String> schedule = scheduleBuilder
-                                            .build();
         Scheduler<String> scheduler = new Scheduler<>(schedule, 2);
         Future<String> result = scheduler.start();
         System.out.println("In main:" + result.get());
-        System.out.println("After get");
+        Schedule<Void> schedule2 = ScheduleBuilder.startWith(task(ExampleClass.class).called("start"))
+                                           .add(task(TakeInputBrtOutput.class).called("printer").waitFor(
+                                                   theOutput("output").ofTask("start").asInput("input")
+                                           )).build();
+        Scheduler<Void> scheduler1 = new Scheduler<>(schedule2, 1);
+        scheduler1.start().get();
     }
 
     @Override

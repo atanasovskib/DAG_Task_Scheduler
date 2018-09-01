@@ -22,12 +22,11 @@ import static com.atanasovski.dagscheduler.dependencies.DependencyDescription.th
 import static com.atanasovski.dagscheduler.dependencies.DependencyDescription.theOutput;
 import static com.atanasovski.dagscheduler.tasks.TaskBuilder.task;
 
-public class ScheduleBuilder<Result> {
+public class ScheduleBuilder {
     private final DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph = new DirectedAcyclicGraph<>(DefaultEdge.class);
     private final Map<String, TaskDefinition<? extends Task>> tasksInSchedule = new HashMap<>();
     private final Table<String, String, List<DependencyDescription>> dependencyTable = HashBasedTable.create();
     private Logger logger = LoggerFactory.getLogger(ScheduleBuilder.class);
-    private SinkDefinition<Result, ? extends Sink<Result>> sinkDefinition;
 
     private ScheduleBuilder(TaskDefinition... startingTasks) {
         long numberOfDistinctTaskIds = Arrays.stream(startingTasks)
@@ -57,11 +56,11 @@ public class ScheduleBuilder<Result> {
                         .build();
     }
 
-    public static <Output> ScheduleBuilder<Output> startWith(TaskDefinition... startingTasks) {
-        return new ScheduleBuilder<>(startingTasks);
+    public static ScheduleBuilder startWith(TaskDefinition... startingTasks) {
+        return new ScheduleBuilder(startingTasks);
     }
 
-    public <T extends Task> ScheduleBuilder<Result> add(TaskDefinition<T> newTask) {
+    public <T extends Task> ScheduleBuilder add(TaskDefinition<T> newTask) {
         String newTaskId = newTask.taskId;
         if (tasksInSchedule.containsKey(newTaskId)) {
             throw new IllegalArgumentException("Task " + newTaskId + " is already added to the schedule");
@@ -89,12 +88,17 @@ public class ScheduleBuilder<Result> {
         return this;
     }
 
-    public ScheduleBuilder<Result> endWith(SinkDefinition<Result, ? extends Sink<Result>> sinkDefinition) {
-        this.sinkDefinition = Objects.requireNonNull(sinkDefinition);
-        return this;
+    public Schedule<Void> build() {
+        SinkDefinition<Void, EmptySink> emptySinkDefinition = createEmptySink();
+        return endWith(emptySinkDefinition);
     }
 
-    public Schedule<Result> build() {
+    private SinkDefinition<Void, EmptySink> createEmptySink() {
+        return new SinkDefinition<>(EmptySink.class, Void.class, Collections.emptyList());
+    }
+
+    public <Result> Schedule<Result> endWith(SinkDefinition<Result, ? extends Sink<Result>> sinkDefinition) {
+        sinkDefinition = Objects.requireNonNull(sinkDefinition);
         Map<String, List<ProcessedDependency>> processedDependencies = new HashMap<>();
         Map<String, Task> taskInstances = new HashMap<>();
 
@@ -112,21 +116,24 @@ public class ScheduleBuilder<Result> {
             taskInstances.put(taskId, instance);
         }
 
-        Pair<Sink<Result>, List<ProcessedDependency>> sink = buildSink(dependencyValidator);
+        Pair<Sink<Result>, List<ProcessedDependency>> sink = buildSink(sinkDefinition, dependencyValidator);
         return new Schedule<>(new FieldExtractor(), taskInstances, processedDependencies, sink.getFirst(), sink.getSecond());
     }
 
-    private Pair<Sink<Result>, List<ProcessedDependency>> buildSink(DependencyValidator dependencyValidator) {
-        List<ProcessedDependency> sinkDependencies = processedDependencies(sinkDefinition.dependencies);
-        dependencyValidator.validate(this.sinkDefinition.producerType, sinkDependencies);
-
+    private <Result, SinkType extends Sink<Result>> Pair<Sink<Result>, List<ProcessedDependency>> buildSink(
+            SinkDefinition<Result, SinkType> sinkDefinition,
+            DependencyValidator dependencyValidator) {
         // Sinks are tasks too, just not of interest to the user
         String sinkTaskId;
         do {
             sinkTaskId = UUID.randomUUID().toString();
         } while (this.tasksInSchedule.containsKey(sinkTaskId));
 
-        Sink<Result> sinkTask = createInstance(this.sinkDefinition.producerType, sinkTaskId);
+        List<ProcessedDependency> sinkDependencies = processedDependencies(sinkDefinition.dependencies);
+        dependencyValidator.validate(sinkDefinition.producerType, sinkDependencies);
+
+
+        Sink<Result> sinkTask = createInstance(sinkDefinition.producerType, sinkTaskId);
         return Pair.of(sinkTask, sinkDependencies);
     }
 
