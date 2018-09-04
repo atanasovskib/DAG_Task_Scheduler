@@ -1,6 +1,5 @@
 package com.atanasovski.dagscheduler.schedule;
 
-import com.atanasovski.dagscheduler.ExampleClass;
 import com.atanasovski.dagscheduler.NoProperConstructorException;
 import com.atanasovski.dagscheduler.dependencies.DependencyDescription;
 import com.atanasovski.dagscheduler.tasks.*;
@@ -18,9 +17,6 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.atanasovski.dagscheduler.dependencies.DependencyDescription.theCompletionOf;
-import static com.atanasovski.dagscheduler.dependencies.DependencyDescription.theOutput;
-import static com.atanasovski.dagscheduler.tasks.TaskBuilder.task;
 
 public class ScheduleBuilder {
     private final DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph = new DirectedAcyclicGraph<>(DefaultEdge.class);
@@ -45,17 +41,6 @@ public class ScheduleBuilder {
 
     }
 
-    public static void minjau() {
-        Schedule schedule =
-                startWith(task(ExampleClass.class).called("Start"))
-                        .add(task(ExampleClass.class).called("A")
-                                     .waitFor(
-                                             theOutput("start_out").ofTask("Start").asInput("a_int"),
-                                             theOutput("a_out").ofTask("A").asInput("b_int"),
-                                             theCompletionOf("A")))
-                        .build();
-    }
-
     public static ScheduleBuilder startWith(TaskDefinition... startingTasks) {
         return new ScheduleBuilder(startingTasks);
     }
@@ -76,7 +61,7 @@ public class ScheduleBuilder {
                 throw new IllegalArgumentException(errorMessage);
             }
 
-            dependencyGraph.addEdge(newTaskId, dependeeTask);
+            dependencyGraph.addEdge(dependeeTask, newTaskId);
             if (!dependencyTable.contains(newTaskId, dependeeTask)) {
                 dependencyTable.put(newTaskId, dependeeTask, new LinkedList<>());
             }
@@ -117,7 +102,7 @@ public class ScheduleBuilder {
         }
 
         Pair<Sink<Result>, List<ProcessedDependency>> sink = buildSink(sinkDefinition, dependencyValidator);
-        return new Schedule<>(new FieldExtractor(), taskInstances, processedDependencies, sink.getFirst(), sink.getSecond());
+        return new Schedule<>(this.dependencyGraph, taskInstances, processedDependencies, sink.getFirst(), sink.getSecond());
     }
 
     private <Result, SinkType extends Sink<Result>> Pair<Sink<Result>, List<ProcessedDependency>> buildSink(

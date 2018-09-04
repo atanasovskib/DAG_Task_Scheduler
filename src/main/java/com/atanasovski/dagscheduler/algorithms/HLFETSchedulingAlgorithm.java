@@ -1,45 +1,64 @@
 package com.atanasovski.dagscheduler.algorithms;
 
-/**
- * Created by Blagoj on 05-Mar-16.
- */
+import com.atanasovski.dagscheduler.tasks.Task;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DirectedAcyclicGraph;
+
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 public abstract class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
-//    @Override
-//    public Executable choose(Executable... readyTasks) {
-//        return Arrays.stream(readyTasks)
-//                .max((t1, t2) -> Float.compare(t1.getExecutionWeight(), t2.getExecutionWeight())).get();
-//    }
-//
-//    @Override
-//    public boolean usesPriority() {
-//        return true;
-//    }
-//
-//
-//    @Override
-//    public void calculatePriorities(final Schedule schedule) {
-//        final DirectedGraph<Executable, DefaultEdge> graph = schedule.getDependencies();
-//        Set<Executable> allVertices = graph.vertexSet();
-//        allVertices.stream()
-//                .filter(task -> graph.inDegreeOf(task) == 0)
-//                .forEach(task -> dfs(graph, task));
-//    }
-//
-//    private int dfs(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
-//        if (current.hasExecutionWeight()) {
-//            return (int) current.getExecutionWeight();
-//        }
-//
-//        if (graph.outDegreeOf(current) == 0) {
-//            current.setExecutionWeight(current.getExecutionTime());
-//            return (int) current.getExecutionWeight();
-//        } else {
-//            Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
-//            Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);
-//            int maxWeightOfNeighbours = neighbours.map(next -> dfs(graph, next)).max(Integer::compare).get();
-//            int weightOfCurrent = current.getExecutionTime() + maxWeightOfNeighbours;
-//            current.setExecutionWeight(weightOfCurrent);
-//            return weightOfCurrent;
-//        }
-//    }
+    private final DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
+    private final Map<String, Integer> taskWeights;
+    private final Map<String, Integer> calculatedLevels;
+
+    public HLFETSchedulingAlgorithm(DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph,
+            Map<String, Integer> taskWeights) {
+        this.dependencyGraph = Objects.requireNonNull(dependencyGraph);
+        this.taskWeights = Collections.unmodifiableMap(taskWeights);
+        this.calculatedLevels = new HashMap<>();
+        calculatePriorities();
+    }
+
+    @Override
+    public List<Task> orderByPriority(List<Task> readyTasks) {
+
+        List<Task> sortedByLevel = new ArrayList<>(readyTasks);
+
+        sortedByLevel.sort((x, y) -> {
+            int levelX = calculatedLevels.get(x.taskId);
+            int levelY = calculatedLevels.get(y.taskId);
+            return Integer.compare(levelX, levelY);
+        });
+
+        return sortedByLevel;
+    }
+
+    private void calculatePriorities() {
+        Set<String> allVertices = this.dependencyGraph.vertexSet();
+        Predicate<String> startingTask = task -> this.dependencyGraph.inDegreeOf(task) == 0;
+        allVertices.stream().filter(startingTask).forEach(this::calculateLevelStartingFrom);
+    }
+
+    private int calculateLevelStartingFrom(String current) {
+        if (this.calculatedLevels.containsKey(current)) {
+            return this.calculatedLevels.get(current);
+        }
+
+        int taskWeight = this.taskWeights.get(current);
+        if (this.dependencyGraph.outDegreeOf(current) == 0) {
+            this.calculatedLevels.put(current, taskWeight);
+            return taskWeight;
+        } else {
+            Set<DefaultEdge> edges = this.dependencyGraph.outgoingEdgesOf(current);
+            Stream<String> neighbours = edges.stream().map(this.dependencyGraph::getEdgeTarget);
+
+            int maxWeightOfNeighbours = neighbours.map(this::calculateLevelStartingFrom).max(Integer::compare)
+                    .orElse(0);
+            int calculatedWeightForTask = taskWeight + maxWeightOfNeighbours;
+            this.calculatedLevels.put(current, taskWeight);
+            return calculatedWeightForTask;
+        }
+    }
 }

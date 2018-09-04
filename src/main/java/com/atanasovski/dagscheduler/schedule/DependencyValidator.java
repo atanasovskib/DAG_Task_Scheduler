@@ -51,7 +51,7 @@ public class DependencyValidator {
         throw new InputDependencyException("Field annotated with @TaskInput or @TaskOutput must be public and not final");
     }
 
-    private List<Field> inputFields(Class taskType) {
+    private List<Field> inputFields(Class<? extends Task> taskType) {
         Field[] taskFields = taskType.getFields();
         return Arrays.stream(taskFields)
                        .filter(x -> x.getAnnotation(TaskInput.class) != null)
@@ -100,7 +100,7 @@ public class DependencyValidator {
         return new InputDependencyException("Expected output dependency");
     }
 
-    private Supplier<InputDependencyException> outputFieldDoesNotExist(Class outputTaskType, String outputArgName) {
+    private Supplier<InputDependencyException> outputFieldDoesNotExist(Class<? extends Task> outputTaskType, String outputArgName) {
         return () -> {
             String errorMessage = String.format(
                     "Task of type [%s], doesn't have a field annotated with @TaskOutput and name of [%s]",
@@ -119,7 +119,7 @@ public class DependencyValidator {
         };
     }
 
-    private ValidationResult inputAndOutputIncompatible(Class inputType, Class outputType) {
+    private ValidationResult inputAndOutputIncompatible(Class<?> inputType, Class<?> outputType) {
         String errorMessage = String.format(
                 "Input argument type [%s] can't accept the value of the output argument of type [%s]",
                 inputType,

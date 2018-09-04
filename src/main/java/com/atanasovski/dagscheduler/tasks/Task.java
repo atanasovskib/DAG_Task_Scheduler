@@ -18,4 +18,8 @@ public abstract class Task {
     }
 
     public abstract void compute();
+
+    public int weight(){
+        return 1;
+    }
 }

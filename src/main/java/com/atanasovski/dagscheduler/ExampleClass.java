@@ -1,5 +1,7 @@
 package com.atanasovski.dagscheduler;
 
+import com.atanasovski.dagscheduler.algorithms.DummySchedulingAlgorithm;
+import com.atanasovski.dagscheduler.algorithms.SchedulingAlgorithm;
 import com.atanasovski.dagscheduler.annotations.TaskOutput;
 import com.atanasovski.dagscheduler.schedule.Schedule;
 import com.atanasovski.dagscheduler.schedule.ScheduleBuilder;
@@ -26,41 +28,26 @@ public class ExampleClass extends Task {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         TaskDefinition<TakeInputBrtOutput> print1 = task(TakeInputBrtOutput.class).called("Print 1")
-                                                            .waitFor(theOutput("output")
-                                                                             .ofTask("Start")
-                                                                             .asInput("input"));
+                .waitFor(theOutput("output").ofTask("Start").asInput("input"));
         TaskDefinition<TakeInputBrtOutput> print2 = task(TakeInputBrtOutput.class).called("Print 2")
-                                                            .waitFor(theOutput("output")
-                                                                             .ofTask("Start")
-                                                                             .asInput("input"),
-                                                                    theCompletionOf("Print 1"));
+                .waitFor(theOutput("output").ofTask("Start").asInput("input"), theCompletionOf("Print 1"));
 
         TaskDefinition<TakeInputBrtOutput> print3 = task(TakeInputBrtOutput.class).called("Print 3")
-                                                            .waitFor(theOutput("output")
-                                                                             .ofTask("Start")
-                                                                             .asInput("input"),
-                                                                    theCompletionOf("Print 2"));
+                .waitFor(theOutput("output").ofTask("Start").asInput("input"), theCompletionOf("Print 2"));
 
-        SinkDefinition<String, ExampleSink> sinkTask = produceA(String.class)
-                                                               .with(ExampleSink.class)
-                                                               .using(theOutput("output")
-                                                                              .ofTask("Start")
-                                                                              .asInput("result"));
+        SinkDefinition<String, ExampleSink> sinkTask = produceA(String.class).with(ExampleSink.class)
+                .using(theOutput("output").ofTask("Start").asInput("result"));
 
-        Schedule<String> schedule = ScheduleBuilder.startWith(task(ExampleClass.class).called("Start"))
-                                            .add(print1)
-                                            .add(print2)
-                                            .add(print3)
-                                            .endWith(sinkTask);
+        Schedule<String> schedule = ScheduleBuilder.startWith(task(ExampleClass.class).called("Start")).add(print1)
+                .add(print2).add(print3).endWith(sinkTask);
 
-        Scheduler<String> scheduler = new Scheduler<>(schedule, 2);
+        SchedulingAlgorithm schedulingAlgorithm = new DummySchedulingAlgorithm();
+        Scheduler<String> scheduler = new Scheduler<>(schedule, schedulingAlgorithm, 2);
         Future<String> result = scheduler.start();
         System.out.println("In main:" + result.get());
         Schedule<Void> schedule2 = ScheduleBuilder.startWith(task(ExampleClass.class).called("start"))
-                                           .add(task(ErrorProducingTask.class).called("printer")
-                                                        .waitFor(theCompletionOf("start")))
-                                           .build();
-        Scheduler<Void> scheduler1 = new Scheduler<>(schedule2, 1);
+                .add(task(ErrorProducingTask.class).called("printer").waitFor(theCompletionOf("start"))).build();
+        Scheduler<Void> scheduler1 = new Scheduler<>(schedule2, schedulingAlgorithm, 1);
         scheduler1.start().get();
     }
 
@@ -69,4 +56,3 @@ public class ExampleClass extends Task {
         this.b = "Симона ТЕ САКАМ!!!";
     }
 }
-

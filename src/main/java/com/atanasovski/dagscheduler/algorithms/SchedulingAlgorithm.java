@@ -1,13 +1,9 @@
 package com.atanasovski.dagscheduler.algorithms;
 
-import com.atanasovski.dagscheduler.schedule.Schedule;
+import com.atanasovski.dagscheduler.tasks.Task;
 
-import java.util.Map;
+import java.util.List;
 
 public interface SchedulingAlgorithm {
-//    Executable choose(Executable... readyTasks);
-
-    boolean usesPriority();
-
-    Map<String, Long> calculatePriorities(Schedule<String> schedule);
+    List<Task> orderByPriority(List<Task> readyTasks);
 }
