@@ -1,5 +1,6 @@
 package com.atanasovski.dagscheduler.dependencies;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class DependencyDescription {
@@ -9,14 +10,14 @@ public class DependencyDescription {
     private final String outputArg;
 
     public DependencyDescription(DependencyType type, String inputArg, String outputTaskId, String outputArg) {
+        this.type = Objects.requireNonNull(type);
+        this.outputTaskId = Objects.requireNonNull(outputTaskId);
         this.inputArg = inputArg;
-        this.outputTaskId = outputTaskId;
         this.outputArg = outputArg;
-        this.type = type;
     }
 
-    public static DependencyDescription theCompletionOf(String taskId) {
-        return new DependencyDescription(DependencyType.ON_COMPLETION, null, taskId, null);
+    public static DependencyDescription theCompletionOf(String outputTaskId) {
+        return new DependencyDescription(DependencyType.ON_COMPLETION, null, outputTaskId, null);
     }
 
 

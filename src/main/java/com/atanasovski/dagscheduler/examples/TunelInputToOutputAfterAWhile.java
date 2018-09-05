@@ -5,7 +5,7 @@ import com.atanasovski.dagscheduler.tasks.Task;
 
 public class TunelInputToOutputAfterAWhile extends Task {
 
-    @TaskInput(paramName = "input")
+    @TaskInput(inputName = "input")
     public String input;
 
     public TunelInputToOutputAfterAWhile(String taskId) {

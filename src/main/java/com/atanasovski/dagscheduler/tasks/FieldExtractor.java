@@ -11,7 +11,7 @@ public class FieldExtractor {
     public Optional<Field> getInputField(Class<? extends Task> taskClass, String inputArgName) {
         return Arrays.stream(taskClass.getFields())
                        .filter(x -> x.getAnnotation(TaskInput.class) != null)
-                       .filter(x -> x.getAnnotation(TaskInput.class).paramName().equals(inputArgName))
+                       .filter(x -> x.getAnnotation(TaskInput.class).inputName().equals(inputArgName))
                        .findAny();
     }
 
