@@ -1,4 +1,6 @@
-package com.atanasovski.dagscheduler.tasks;
+package com.atanasovski.dagscheduler.tasks.builders;
+
+import com.atanasovski.dagscheduler.tasks.Task;
 
 import java.util.Objects;
 

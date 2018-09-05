@@ -9,7 +9,7 @@ public class ProcessedDependency {
     public final Class<? extends Task> outputTaskType;
     public final DependencyDescription dependency;
 
-    ProcessedDependency(Class<? extends Task> outputTaskType, DependencyDescription dependency) {
+    public ProcessedDependency(Class<? extends Task> outputTaskType, DependencyDescription dependency) {
         this.outputTaskType = Objects.requireNonNull(outputTaskType);
         this.dependency = Objects.requireNonNull(dependency);
     }

@@ -1,7 +1,9 @@
-package com.atanasovski.dagscheduler.tasks;
+package com.atanasovski.dagscheduler.tasks.builders;
 
 import com.atanasovski.dagscheduler.dependencies.DependencyDescription;
 import com.atanasovski.dagscheduler.dependencies.DependencyType;
+import com.atanasovski.dagscheduler.tasks.Sink;
+import com.atanasovski.dagscheduler.tasks.SinkDefinition;
 
 import java.util.Arrays;
 import java.util.Objects;

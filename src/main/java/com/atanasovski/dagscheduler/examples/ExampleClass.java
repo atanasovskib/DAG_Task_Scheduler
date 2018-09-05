@@ -8,7 +8,7 @@ import com.atanasovski.dagscheduler.schedule.ScheduleBuilder;
 import com.atanasovski.dagscheduler.schedule.Scheduler;
 import com.atanasovski.dagscheduler.tasks.SinkDefinition;
 import com.atanasovski.dagscheduler.tasks.Task;
-import com.atanasovski.dagscheduler.tasks.TaskDefinition;
+import com.atanasovski.dagscheduler.tasks.builders.TaskDefinition;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedAcyclicGraph;
 
@@ -18,8 +18,8 @@ import java.util.concurrent.Future;
 
 import static com.atanasovski.dagscheduler.dependencies.DependencyDescription.theCompletionOf;
 import static com.atanasovski.dagscheduler.dependencies.DependencyDescription.theOutput;
-import static com.atanasovski.dagscheduler.tasks.SinkBuilder.produceA;
-import static com.atanasovski.dagscheduler.tasks.TaskBuilder.task;
+import static com.atanasovski.dagscheduler.tasks.builders.SinkBuilder.produceA;
+import static com.atanasovski.dagscheduler.tasks.builders.TaskBuilder.task;
 
 public class ExampleClass extends Task {
     @TaskOutput(outputName = "output")

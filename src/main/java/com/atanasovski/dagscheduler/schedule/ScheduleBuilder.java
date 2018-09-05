@@ -3,6 +3,7 @@ package com.atanasovski.dagscheduler.schedule;
 import com.atanasovski.dagscheduler.dependencies.DependencyDescription;
 import com.atanasovski.dagscheduler.dependencies.ProcessedDependency;
 import com.atanasovski.dagscheduler.tasks.*;
+import com.atanasovski.dagscheduler.tasks.builders.TaskDefinition;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import org.jgrapht.alg.util.Pair;
