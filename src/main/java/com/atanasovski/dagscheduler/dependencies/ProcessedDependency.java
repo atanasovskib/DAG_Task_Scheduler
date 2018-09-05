@@ -1,7 +1,5 @@
-package com.atanasovski.dagscheduler.schedule;
+package com.atanasovski.dagscheduler.dependencies;
 
-import com.atanasovski.dagscheduler.dependencies.DependencyDescription;
-import com.atanasovski.dagscheduler.dependencies.DependencyType;
 import com.atanasovski.dagscheduler.tasks.Task;
 
 import java.util.Objects;

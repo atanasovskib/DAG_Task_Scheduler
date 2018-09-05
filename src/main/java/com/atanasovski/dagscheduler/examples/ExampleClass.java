@@ -1,4 +1,4 @@
-package com.atanasovski.dagscheduler;
+package com.atanasovski.dagscheduler.examples;
 
 import com.atanasovski.dagscheduler.algorithms.HLFETSchedulingAlgorithm;
 import com.atanasovski.dagscheduler.algorithms.SchedulingAlgorithm;
@@ -30,13 +30,13 @@ public class ExampleClass extends Task {
     }
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        TaskDefinition<TakeInputBrtOutput> print1 = task(TakeInputBrtOutput.class).called("Print 1")
-                                                            .waitFor(theOutput("output").ofTask("Start").asInput("input"));
-        TaskDefinition<TakeInputBrtOutput> print2 = task(TakeInputBrtOutput.class).called("Print 2").waitFor(
+        TaskDefinition<TunelInputToOutputAfterAWhile> print1 = task(TunelInputToOutputAfterAWhile.class).called("Print 1")
+                                                                       .waitFor(theOutput("output").ofTask("Start").asInput("input"));
+        TaskDefinition<TunelInputToOutputAfterAWhile> print2 = task(TunelInputToOutputAfterAWhile.class).called("Print 2").waitFor(
                 theOutput("output").ofTask("Start").asInput("input"), theCompletionOf("Print 1"));
 
-        TaskDefinition<TakeInputBrtOutput> print3 = task(TakeInputBrtOutput.class).called("Print 3")
-                                                            .waitFor(theOutput("output").ofTask("Start").asInput("input"));
+        TaskDefinition<TunelInputToOutputAfterAWhile> print3 = task(TunelInputToOutputAfterAWhile.class).called("Print 3")
+                                                                       .waitFor(theOutput("output").ofTask("Start").asInput("input"));
 
         SinkDefinition<String, ExampleSink> sinkTask = produceA(String.class).with(ExampleSink.class)
                                                                .using(theOutput("output").ofTask("Start").asInput("result"));

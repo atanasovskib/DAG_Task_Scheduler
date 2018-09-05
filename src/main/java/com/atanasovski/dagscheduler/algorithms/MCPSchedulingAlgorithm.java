@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
+    private final Map<String, Integer> taskWeights;
+    private final DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
     private Map<String, Integer> alapTimes = new HashMap<>();
     private Map<String, List<Integer>> alapLists = new HashMap<>();
     private int minAlap = Integer.MAX_VALUE;
-    private final Map<String, Integer> taskWeights;
-    private final DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
 
     public MCPSchedulingAlgorithm(Map<String, Integer> taskWeights,
                                   DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph) {

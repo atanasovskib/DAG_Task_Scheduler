@@ -1,4 +1,4 @@
-package com.atanasovski.dagscheduler;
+package com.atanasovski.dagscheduler.examples;
 
 import com.atanasovski.dagscheduler.tasks.Task;
 

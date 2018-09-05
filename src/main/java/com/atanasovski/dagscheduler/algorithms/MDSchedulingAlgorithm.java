@@ -14,7 +14,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
     private DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
 
     public MDSchedulingAlgorithm(Map<String, Integer> taskWeights,
-                                 DirectedAcyclicGraph<String, DefaultEdge> depdendencyGraph) {
+                                 DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph) {
         this.taskWeights = Collections.unmodifiableMap(taskWeights);
         this.dependencyGraph = Objects.requireNonNull(dependencyGraph);
     }
@@ -36,7 +36,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         return sortedByPriority;
     }
 
-    public Map<String, Float> calculatePriorities() {
+    private Map<String, Float> calculatePriorities() {
         Map<String, Integer> alapTimes = this.calculateALAP();
         Map<String, Integer> asapTimes = this.calculateASAP();
         return this.calculateMD(alapTimes, asapTimes);
@@ -109,6 +109,8 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         Set<DefaultEdge> edges = this.dependencyGraph.outgoingEdgesOf(current);
         int currentTaskWeight = this.taskWeights.get(current);
         Stream<String> neighbours = edges.stream().map(dependencyGraph::getEdgeTarget);
-        neighbours.forEach(neighbour -> calculateASAPFromOneNode(asapTimes, neighbour, startTime + currentTaskWeight));
+        int neighbourStartTime = startTime + currentTaskWeight;
+
+        neighbours.forEach(neighbour -> calculateASAPFromOneNode(asapTimes, neighbour, neighbourStartTime));
     }
 }

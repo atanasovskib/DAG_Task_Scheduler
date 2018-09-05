@@ -1,6 +1,7 @@
 package com.atanasovski.dagscheduler.schedule;
 
 import com.atanasovski.dagscheduler.dependencies.DependencyType;
+import com.atanasovski.dagscheduler.dependencies.ProcessedDependency;
 import com.atanasovski.dagscheduler.tasks.FieldExtractor;
 import com.atanasovski.dagscheduler.tasks.Sink;
 import com.atanasovski.dagscheduler.tasks.Task;

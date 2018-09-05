@@ -23,10 +23,9 @@ public class Scheduler<Output> {
     private final Schedule<Output> schedule;
     private final CompletableFuture<Output> outputFuture;
     private final SchedulingAlgorithm algorithm;
-
+    private final String sinkTaskId;
     private AtomicBoolean alreadyStartedOnce = new AtomicBoolean(false);
     private AtomicBoolean errorOccurred = new AtomicBoolean(false);
-    private final String sinkTaskId;
 
     public Scheduler(Schedule<Output> schedule, SchedulingAlgorithm schedulingAlgorithm,
                      int maxNumberOfExecutionThreads) {

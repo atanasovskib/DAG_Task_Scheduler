@@ -1,14 +1,14 @@
-package com.atanasovski.dagscheduler;
+package com.atanasovski.dagscheduler.examples;
 
 import com.atanasovski.dagscheduler.annotations.TaskInput;
 import com.atanasovski.dagscheduler.tasks.Task;
 
-public class TakeInputBrtOutput extends Task {
+public class TunelInputToOutputAfterAWhile extends Task {
 
     @TaskInput(paramName = "input")
     public String input;
 
-    public TakeInputBrtOutput(String taskId) {
+    public TunelInputToOutputAfterAWhile(String taskId) {
         super(taskId);
     }
 

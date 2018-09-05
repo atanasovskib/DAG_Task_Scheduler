@@ -1,8 +1,8 @@
 package com.atanasovski.dagscheduler.schedule;
 
-import com.atanasovski.dagscheduler.ValidationResult;
 import com.atanasovski.dagscheduler.annotations.TaskInput;
 import com.atanasovski.dagscheduler.dependencies.DependencyType;
+import com.atanasovski.dagscheduler.dependencies.ProcessedDependency;
 import com.atanasovski.dagscheduler.tasks.FieldExtractor;
 import com.atanasovski.dagscheduler.tasks.Task;
 
@@ -110,22 +110,22 @@ public class DependencyValidator {
         };
     }
 
-    private Function<Field, ValidationResult> compareTypes(Field inputField) {
+    private Function<Field, Field> compareTypes(Field inputField) {
         return field -> {
             boolean isAssignable = inputField.getType().isAssignableFrom(field.getType());
-            return isAssignable
-                           ? ValidationResult.ok()
-                           : inputAndOutputIncompatible(inputField.getType(), field.getType());
+            if (!isAssignable) {
+                throw new InputDependencyException(inputAndOutputIncompatible(inputField.getType(), field.getType()));
+            }
+
+            return field;
         };
     }
 
-    private ValidationResult inputAndOutputIncompatible(Class<?> inputType, Class<?> outputType) {
-        String errorMessage = String.format(
+    private String inputAndOutputIncompatible(Class<?> inputType, Class<?> outputType) {
+        return String.format(
                 "Input argument type [%s] can't accept the value of the output argument of type [%s]",
                 inputType,
                 outputType);
-
-        return ValidationResult.error(errorMessage);
     }
 
     private Consumer<Field> validateByName(Map<String, ProcessedDependency> dependencies) {
