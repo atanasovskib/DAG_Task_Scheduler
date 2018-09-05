@@ -25,16 +25,16 @@ public class Scheduler<Output> {
     private final SchedulingAlgorithm algorithm;
 
     private AtomicBoolean alreadyStartedOnce = new AtomicBoolean(false);
-    private AtomicBoolean errorOccured = new AtomicBoolean(false);
+    private AtomicBoolean errorOccurred = new AtomicBoolean(false);
     private final String sinkTaskId;
 
     public Scheduler(Schedule<Output> schedule, SchedulingAlgorithm schedulingAlgorithm,
-            int maxNumberOfExecutionThreads) {
+                     int maxNumberOfExecutionThreads) {
         this.schedule = Objects.requireNonNull(schedule);
         this.algorithm = Objects.requireNonNull(schedulingAlgorithm);
         this.schedulingExecutor = Executors.newSingleThreadExecutor();
         this.taskExecutor = Executors.newFixedThreadPool(maxNumberOfExecutionThreads);
-        this.outputFuture = schedule.onComplete();
+        this.outputFuture = schedule.onScheduleComplete();
         this.sinkTaskId = schedule.sinkTask.taskId;
     }
 
@@ -50,15 +50,13 @@ public class Scheduler<Output> {
     }
 
     private void checkForReadyTasks() {
-        if (errorOccured.get()) {
+        if (errorOccurred.get()) {
             log.info("An error has occurred, skipping scheduling");
             return;
         }
 
-        // Because the same executor is used to complete a task as the ones to check for
-        // ready
-        // tasks, then no changes in ready tasks can happen between choosing which next
-        // task
+        // Because the same executor is used to complete a task as the ones to check for ready
+        // tasks, then no changes in ready tasks can happen between choosing which next task
         // to be scheduled by the algorithm
         List<Task> readyTasks = this.schedule.getReady();
         log.debug("Found [{}] ready tasks", readyTasks.size());
@@ -69,7 +67,7 @@ public class Scheduler<Output> {
     }
 
     private void scheduleReadyTask(Task task) {
-        if (errorOccured.get()) {
+        if (errorOccurred.get()) {
             log.info("An error has occurred, skipping scheduling");
             return;
         }
@@ -80,7 +78,8 @@ public class Scheduler<Output> {
 
         CompletableFuture<Void> taskFuture;
         taskFuture = CompletableFuture.supplyAsync(this.executeTask(task), this.taskExecutor)
-                .thenAcceptAsync(this::notifyTaskComplete, this.schedulingExecutor).exceptionally(stopExecution);
+                             .thenAcceptAsync(this::notifyTaskComplete, this.schedulingExecutor)
+                             .exceptionally(stopExecution);
         if (task.taskId.equals(this.sinkTaskId)) {
             taskFuture.thenRunAsync(this::shutDownExecutors, this.schedulingExecutor);
         } else {
@@ -104,9 +103,9 @@ public class Scheduler<Output> {
     private void stopExecution(String taskId, Throwable exceptionThrown) {
         this.taskExecutor.shutdown();
         this.schedulingExecutor.shutdown();
-        this.errorOccured.set(true);
+        this.errorOccurred.set(true);
         String errorMessage = "Schedule execution failed in task [" + taskId + "] Caused by "
-                + exceptionThrown.getMessage();
+                                      + exceptionThrown.getMessage();
         RuntimeException runtimeException = new RuntimeException(errorMessage, exceptionThrown);
         outputFuture.completeExceptionally(runtimeException);
     }

@@ -1,125 +1,114 @@
 package com.atanasovski.dagscheduler.algorithms;
 
-/**
- * Created by Blagoj on 06-Mar-16.
- */
-public abstract class MDSchedulingAlgorithm implements SchedulingAlgorithm {
-//    final Logger logger = LoggerFactory.getLogger(MDSchedulingAlgorithm.class);
-//    private final Schedule schedule;
-//    private int minALAP = Integer.MAX_VALUE;
-//    private Map<Executable, Integer> alapTimes = new HashMap<>();
-//    private Map<Executable, Integer> asapTimes = new HashMap<>();
-//
-//    public MDSchedulingAlgorithm(Schedule schedule) {
-//        Objects.requireNonNull(schedule);
-//        this.schedule = schedule;
-//    }
-//
-//    @Override
-//    public Executable choose(Executable... readyTasks) {
-//        if (readyTasks.length == 0) {
-//            throw new IllegalArgumentException("must pass at least one ready task");
-//        }
-//
-//        this.calculatePriorities1(this.schedule);
-//        logger.info("Choosing ofTask: {}", Arrays.toString(readyTasks));
-//        Executable chosen = Arrays.stream(readyTasks)
-//                                    .min((a, b) -> Float.compare(a.getExecutionWeight(), b.getExecutionWeight()))
-//                                    .get();
-//        logger.info("Chosen: {}", chosen);
-//        return chosen;
-//    }
-//
-//    @Override
-//    public boolean usesPriority() {
-//        return true;
-//    }
-//
-//    @Override
-//    public Map<String, Long> calculatePriorities(Schedule schedule) {
-//        return null;
-//    }
-//
-//    public void calculatePriorities1(final Schedule schedule) {
-//        Objects.requireNonNull(schedule);
-//        reset();
-//        this.calculateALAP(schedule.getDependencies());
-//        logger.info("ALAP: {}", this.alapTimes.toString());
-//        this.calculateASAP(schedule.getDependencies());
-//        logger.info("ASAP: {}", this.asapTimes.toString());
-//        this.calculateMD(schedule.getDependencies());
-//    }
-//
-//    private void reset() {
-//        this.alapTimes.clear();
-//        this.asapTimes.clear();
-//        this.minALAP = Integer.MAX_VALUE;
-//    }
-//
-//    private void calculateMD(DirectedAcyclicGraph<Executable, DefaultEdge> dependencies) {
-//        StringBuilder sb = new StringBuilder();
-//        dependencies.vertexSet().forEach(exe -> {
-//            float diff = this.alapTimes.get(exe) - this.asapTimes.get(exe);
-//            exe.setExecutionWeight(diff / exe.getExecutionTime());
-//            sb.append(exe.getId()).append(':').append(exe.getExecutionWeight()).append(", ");
-//        });
-//
-//        logger.info("MD: {}", sb.toString());
-//    }
-//
-//    private void calculateALAP(final DirectedAcyclicGraph<Executable, DefaultEdge> graph) {
-//        Set<Executable> allVertices = graph.vertexSet();
-//        allVertices.stream()
-//                .filter(task -> graph.inDegreeOf(task) == 0)
-//                .forEach(task -> alapFromOneNode(graph, task));
-//        int executionTime = -this.minALAP;
-//        allVertices.forEach(exe -> this.alapTimes.put(exe, executionTime + this.alapTimes.get(exe)));
-//    }
-//
-//    private int alapFromOneNode(final DirectedAcyclicGraph<Executable, DefaultEdge> graph, final Executable current) {
-//        if (this.alapTimes.containsKey(current)) {
-//            return this.alapTimes.get(current);
-//        }
-//
-//        if (graph.outDegreeOf(current) == 0) {
-//            int tmp = -current.getExecutionTime();
-//            this.alapTimes.put(current, tmp);
-//            this.minALAP = Math.min(tmp, this.minALAP);
-//            return tmp;
-//        } else {
-//            Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
-//            Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);
-//            int maxStartTimeOfNeighbours = neighbours.map(next -> alapFromOneNode(graph, next))
-//                                                   .min(Integer::compare).get();
-//            int maxStartTimeOfCurrent = -current.getExecutionTime() + maxStartTimeOfNeighbours;
-//            this.minALAP = Math.min(maxStartTimeOfCurrent, this.minALAP);
-//            this.alapTimes.put(current, maxStartTimeOfCurrent);
-//            return maxStartTimeOfCurrent;
-//        }
-//
-//    }
-//
-//    private void calculateASAP(final DirectedAcyclicGraph<Executable, DefaultEdge> graph) {
-//        Set<Executable> allVertices = graph.vertexSet();
-//        allVertices.stream()
-//                .filter(task -> graph.inDegreeOf(task) == 0)
-//                .forEach(task -> calculateASAPFromOneNode(graph, task, 0));
-//    }
-//
-//    private void calculateASAPFromOneNode(DirectedAcyclicGraph<Executable, DefaultEdge> graph, Executable current, int startTime) {
-//        if (this.asapTimes.containsKey(current)) {
-//            int min = Math.max(this.asapTimes.get(current), startTime);
-//            this.asapTimes.put(current, min);
-//        } else {
-//            this.asapTimes.put(current, startTime);
-//        }
-//
-//        if (graph.outDegreeOf(current) == 0) {
-//            return;
-//        }
-//
-//        Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
-//        Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);
-//        neighbours.forEach(neighbour -> calculateASAPFromOneNode(graph, neighbour, startTime + current.getExecutionTime()));
-//    }
+import com.atanasovski.dagscheduler.tasks.Task;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DirectedAcyclicGraph;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+
+public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
+
+    private Map<String, Integer> taskWeights;
+    private DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
+
+    public MDSchedulingAlgorithm(Map<String, Integer> taskWeights,
+                                 DirectedAcyclicGraph<String, DefaultEdge> depdendencyGraph) {
+        this.taskWeights = Collections.unmodifiableMap(taskWeights);
+        this.dependencyGraph = Objects.requireNonNull(dependencyGraph);
+    }
+
+    @Override
+    public List<Task> orderByPriority(List<Task> readyTasks) {
+        if (readyTasks.size() <= 1) {
+            return readyTasks;
+        }
+
+        Map<String, Float> calculatedMD = this.calculatePriorities();
+        List<Task> sortedByPriority = new ArrayList<>(readyTasks);
+        sortedByPriority.sort((x, y) -> {
+            float xK = calculatedMD.get(x.taskId);
+            float yK = calculatedMD.get(y.taskId);
+            return Float.compare(xK, yK);
+        });
+
+        return sortedByPriority;
+    }
+
+    public Map<String, Float> calculatePriorities() {
+        Map<String, Integer> alapTimes = this.calculateALAP();
+        Map<String, Integer> asapTimes = this.calculateASAP();
+        return this.calculateMD(alapTimes, asapTimes);
+    }
+
+    private Map<String, Float> calculateMD(Map<String, Integer> alapTimes, Map<String, Integer> asapTimes) {
+        Map<String, Float> md = new HashMap<>();
+        this.dependencyGraph.vertexSet().forEach(exe -> {
+            int diff = alapTimes.get(exe) - asapTimes.get(exe);
+            int currentTaskWeight = taskWeights.get(exe);
+            float taskMd = diff / (float) currentTaskWeight;
+            md.put(exe, taskMd);
+        });
+
+        return md;
+    }
+
+    private Map<String, Integer> calculateALAP() {
+        Set<String> allVertices = dependencyGraph.vertexSet();
+        Stream<String> startingTasks = allVertices.stream().filter(task -> dependencyGraph.inDegreeOf(task) == 0);
+        Map<String, Integer> alapTimes = new HashMap<>();
+        AtomicInteger minAlap = new AtomicInteger(0);
+        startingTasks.forEach(task -> this.alapFromOneNode(alapTimes, minAlap, task));
+        int executionTime = -minAlap.get();
+        allVertices.forEach(exe -> alapTimes.put(exe, executionTime + alapTimes.get(exe)));
+        return alapTimes;
+    }
+
+    private int alapFromOneNode(Map<String, Integer> alapTimes, AtomicInteger minAlap, String current) {
+        if (alapTimes.containsKey(current)) {
+            return alapTimes.get(current);
+        }
+
+        int currentTaskWeight = -taskWeights.get(current);
+        int maxStartTimeOfNeighbours = 0;
+        if (this.dependencyGraph.outDegreeOf(current) != 0) {
+            Set<DefaultEdge> edges = dependencyGraph.outgoingEdgesOf(current);
+            Stream<String> neighbours = edges.stream().map(dependencyGraph::getEdgeTarget);
+            maxStartTimeOfNeighbours = neighbours.map(next -> alapFromOneNode(alapTimes, minAlap, next))
+                                               .min(Integer::compare).get();
+        }
+
+        int maxStartTimeOfCurrent = currentTaskWeight + maxStartTimeOfNeighbours;
+        minAlap.set(Math.min(maxStartTimeOfCurrent, minAlap.get()));
+        alapTimes.put(current, maxStartTimeOfCurrent);
+        return maxStartTimeOfCurrent;
+    }
+
+    private Map<String, Integer> calculateASAP() {
+        Map<String, Integer> asapTimes = new HashMap<>();
+        Set<String> allVertices = this.dependencyGraph.vertexSet();
+        Stream<String> startingTasks = allVertices.stream().filter(task -> dependencyGraph.inDegreeOf(task) == 0);
+
+        startingTasks.forEach(task -> calculateASAPFromOneNode(asapTimes, task, 0));
+        return asapTimes;
+    }
+
+    private void calculateASAPFromOneNode(Map<String, Integer> asapTimes, String current, int startTime) {
+        if (asapTimes.containsKey(current)) {
+            int min = Math.max(asapTimes.get(current), startTime);
+            asapTimes.put(current, min);
+        } else {
+            asapTimes.put(current, startTime);
+        }
+
+        if (this.dependencyGraph.outDegreeOf(current) == 0) {
+            return;
+        }
+
+        Set<DefaultEdge> edges = this.dependencyGraph.outgoingEdgesOf(current);
+        int currentTaskWeight = this.taskWeights.get(current);
+        Stream<String> neighbours = edges.stream().map(dependencyGraph::getEdgeTarget);
+        neighbours.forEach(neighbour -> calculateASAPFromOneNode(asapTimes, neighbour, startTime + currentTaskWeight));
+    }
 }

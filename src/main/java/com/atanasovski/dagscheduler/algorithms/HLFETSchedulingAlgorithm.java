@@ -3,18 +3,22 @@ package com.atanasovski.dagscheduler.algorithms;
 import com.atanasovski.dagscheduler.tasks.Task;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedAcyclicGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public abstract class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
+public class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
+    private static final Logger log = LoggerFactory.getLogger(HLFETSchedulingAlgorithm.class);
+
     private final DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
     private final Map<String, Integer> taskWeights;
     private final Map<String, Integer> calculatedLevels;
 
     public HLFETSchedulingAlgorithm(DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph,
-            Map<String, Integer> taskWeights) {
+                                    Map<String, Integer> taskWeights) {
         this.dependencyGraph = Objects.requireNonNull(dependencyGraph);
         this.taskWeights = Collections.unmodifiableMap(taskWeights);
         this.calculatedLevels = new HashMap<>();
@@ -55,8 +59,9 @@ public abstract class HLFETSchedulingAlgorithm implements SchedulingAlgorithm {
             Stream<String> neighbours = edges.stream().map(this.dependencyGraph::getEdgeTarget);
 
             int maxWeightOfNeighbours = neighbours.map(this::calculateLevelStartingFrom).max(Integer::compare)
-                    .orElse(0);
+                                                .orElse(0);
             int calculatedWeightForTask = taskWeight + maxWeightOfNeighbours;
+            log.debug("Calculated weight for task [{}] = [{}]", current, calculatedWeightForTask);
             this.calculatedLevels.put(current, taskWeight);
             return calculatedWeightForTask;
         }
