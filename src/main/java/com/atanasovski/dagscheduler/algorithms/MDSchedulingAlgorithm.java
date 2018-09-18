@@ -8,13 +8,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
+public class MDSchedulingAlgorithm extends WeightedSchedulingAlgorithm {
 
     private Map<String, Integer> taskWeights;
     private DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
 
-    public MDSchedulingAlgorithm(Map<String, Integer> taskWeights,
-                                 DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph) {
+    public MDSchedulingAlgorithm(DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph,
+                                 Map<String, Integer> taskWeights) {
+        super(dependencyGraph, taskWeights);
         this.taskWeights = Collections.unmodifiableMap(taskWeights);
         this.dependencyGraph = Objects.requireNonNull(dependencyGraph);
     }

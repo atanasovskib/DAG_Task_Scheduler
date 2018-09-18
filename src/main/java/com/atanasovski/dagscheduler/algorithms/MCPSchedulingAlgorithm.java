@@ -8,18 +8,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
+public class MCPSchedulingAlgorithm extends WeightedSchedulingAlgorithm {
     private final Map<String, Integer> taskWeights;
     private final DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph;
     private Map<String, Integer> alapTimes = new HashMap<>();
     private Map<String, List<Integer>> alapLists = new HashMap<>();
     private int minAlap = Integer.MAX_VALUE;
 
-    public MCPSchedulingAlgorithm(Map<String, Integer> taskWeights,
-                                  DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph) {
-        this.taskWeights = Objects.requireNonNull(taskWeights);
-        this.dependencyGraph = Objects.requireNonNull(dependencyGraph);
-
+    public MCPSchedulingAlgorithm(DirectedAcyclicGraph<String, DefaultEdge> dependencyGraph,
+                                  Map<String, Integer> taskWeights) {
+        super(dependencyGraph, taskWeights);
+        this.taskWeights = Collections.unmodifiableMap(taskWeights);
+        this.dependencyGraph = dependencyGraph;
         this.calculateAlap();
         this.calculateAlapLists();
     }
@@ -46,7 +46,8 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
 
     private void calculateAlap() {
         Set<String> allVertices = this.dependencyGraph.vertexSet();
-        Stream<String> startingTasks = allVertices.stream().filter(task -> dependencyGraph.inDegreeOf(task) == 0);
+        Stream<String> startingTasks = allVertices.stream()
+                                               .filter(task -> dependencyGraph.inDegreeOf(task) == 0);
 
         startingTasks.forEach(this::alapFromOneNode);
         int executionTime = -this.minAlap;
@@ -74,7 +75,6 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
 
     private List<Integer> createAlapListForStartingNode(String current) {
         if (alapLists.containsKey(current)) {
-            System.out.println("result exists: " + alapLists.get(current));
             return alapLists.get(current);
         }
 

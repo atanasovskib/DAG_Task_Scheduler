@@ -11,6 +11,16 @@ public class DependencyDescription {
 
     public DependencyDescription(DependencyType type, String inputArg, String outputTaskId, String outputArg) {
         this.type = Objects.requireNonNull(type);
+        if (type == DependencyType.ON_COMPLETION && (inputArg != null || outputArg != null)) {
+            throw new IllegalArgumentException("If task depends on completion of another, then it should not have an" +
+                                                       "input and output arg assigned");
+        }
+
+        if (type == DependencyType.ON_OUTPUT && (inputArg == null || outputArg == null)) {
+            throw new IllegalArgumentException("If task depends on the output of another then the input and output arg" +
+                                                       "should never be null");
+        }
+
         this.outputTaskId = Objects.requireNonNull(outputTaskId);
         this.inputArg = inputArg;
         this.outputArg = outputArg;
@@ -31,5 +41,21 @@ public class DependencyDescription {
 
     public Optional<String> outputArg() {
         return Optional.ofNullable(this.outputArg);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DependencyDescription that = (DependencyDescription) o;
+        return Objects.equals(outputTaskId, that.outputTaskId) &&
+                       type == that.type &&
+                       Objects.equals(inputArg, that.inputArg) &&
+                       Objects.equals(outputArg, that.outputArg);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(outputTaskId, type, inputArg, outputArg);
     }
 }

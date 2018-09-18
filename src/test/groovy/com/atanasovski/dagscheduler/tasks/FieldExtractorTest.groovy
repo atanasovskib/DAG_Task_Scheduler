@@ -9,7 +9,7 @@ class FieldExtractorTest extends Specification {
     FieldExtractor extractor
 
     def setup() {
-        extractor = new FieldExtractor();
+        extractor = new FieldExtractor()
     }
 
     @Unroll
@@ -38,6 +38,28 @@ class FieldExtractorTest extends Specification {
 
     }
 
+    def "wrongfully named input and output fields should not exist"() {
+        when:
+        def field = extractor.getInputField(A.class, "wrong")
+        def field2 = extractor.getOutputField(A.class , "wrong")
+
+        then:
+        !field.isPresent()
+        !field2.isPresent()
+    }
+
+    def "get field annotated as output should be of type String and named d"(){
+        def outputArgName = "d_arg"
+        when:
+        def field = extractor.getOutputField(A.class, outputArgName)
+
+        then:
+        field.isPresent()
+        field.get().type == String.class
+        field.get().getName() == "d"
+        field.get().getAnnotation(TaskOutput.class).outputName() == outputArgName
+    }
+
     abstract class A extends Task {
         @TaskInput(inputName = "a")
         public int a
@@ -48,7 +70,7 @@ class FieldExtractorTest extends Specification {
         @TaskInput(inputName = "c")
         private float c
 
-        @TaskOutput(outputName = "d")
+        @TaskOutput(outputName = "d_arg")
         public String d
 
         public long e
