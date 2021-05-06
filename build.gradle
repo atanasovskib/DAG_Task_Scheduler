@@ -10,8 +10,8 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
-    compile 'org.slf4j:slf4j-api:1.7.18'
-    compile 'org.slf4j:slf4j-simple:1.7.18'
-    compile 'org.jgrapht:jgrapht-core:0.9.1'
+    testImplementation group: 'junit', name: 'junit', version: '4.11'
+    implementation 'org.slf4j:slf4j-api:1.7.18'
+    implementation 'org.slf4j:slf4j-simple:1.7.18'
+    implementation 'org.jgrapht:jgrapht-core:0.9.1'
 }
