@@ -198,28 +198,16 @@ class A extends Executable {
 
     @Override
     public void execute() {
-        try {
-            int newId = generator.generate();
-            produce(ScheduleWithSharedResource.Result, String.format("%s: id %d", Thread.currentThread().getName(), newId));
-        } catch (IllegalAccessException | InterruptedException e) {
-            if (e instanceof IllegalAccessException) {
-                error("resource not locked");
-            } else {
-                error("thread interrupted while requesting lock");
-            }
-        }
+        int newId = generator.generate();
+        produce(ScheduleWithSharedResource.Result, String.format("%s: id %d", Thread.currentThread().getName(), newId));
     }
 }
 
 class IdGenerator {
-    SharedResource<Integer> serial = new SharedResource<>(0);
+    AtomicReference<Integer> serial = new AtomicReference<>(0);
 
-    public int generate() throws IllegalAccessException, InterruptedException {
-        SharedResource<Integer>.ResourceOperation<Integer> getter = serial.createOperation(Function.identity());
-        serial.lock();
-        int newId = getter.getResult();
-        serial.set(newId + 1).unlock();
-        return newId;
+    public int generate() {
+        return serial.getAndAccumulate(1, Integer::sum);
     }
 }
 

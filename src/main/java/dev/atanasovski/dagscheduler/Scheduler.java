@@ -65,11 +65,10 @@ public class Scheduler {
                         this.executor.execute(chosen);
                     }
                 } else {
-                    Set<Executable> readyTasks = new HashSet<>();
-                    readyTasks.addAll(Arrays.asList(this.schedule.getReadyTasks()));
+                    Set<Executable> readyTasks = new HashSet<>(Arrays.asList(this.schedule.getReadyTasks()));
                     logger.info("Ready tasks: " + readyTasks.size());
                     while (!readyTasks.isEmpty()) {
-                        Executable chosen = this.algorithm.choose(readyTasks.toArray(new Executable[readyTasks.size()]));
+                        Executable chosen = this.algorithm.choose(readyTasks.toArray(new Executable[0]));
                         readyTasks.remove(chosen);
                         this.currentRunningTasks.incrementAndGet();
                         logger.info("Starting task: {}", chosen.getId());
@@ -113,6 +112,5 @@ public class Scheduler {
         this.schedule.notifyError(errors);
         logger.info("Error in task {}, waking up scheduler", errors.toString());
         this.notifyAll();
-
     }
 }

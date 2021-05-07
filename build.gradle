@@ -3,7 +3,7 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'idea'
-sourceCompatibility = 1.8
+sourceCompatibility = JavaVersion.VERSION_15
 
 repositories {
     mavenCentral()

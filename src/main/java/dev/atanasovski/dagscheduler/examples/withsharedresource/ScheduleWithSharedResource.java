@@ -2,13 +2,9 @@ package dev.atanasovski.dagscheduler.examples.withsharedresource;
 
 import dev.atanasovski.dagscheduler.Executable;
 import dev.atanasovski.dagscheduler.Schedule;
-import dev.atanasovski.dagscheduler.SharedResource;
 
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Created by Blagoj on 04-Mar-16.
- */
 public class ScheduleWithSharedResource extends Schedule {
     public static final String Result = "result";
 
@@ -19,14 +15,10 @@ public class ScheduleWithSharedResource extends Schedule {
 }
 
 class IdGenerator {
-    SharedResource<Integer> serial = new SharedResource<>(0);
+    AtomicReference<Integer> serial = new AtomicReference<>(0);
 
-    public int generate() throws IllegalAccessException, InterruptedException {
-        SharedResource<Integer>.ResourceOperation<Integer> getter = serial.createSafeGet(Function.identity());
-        serial.lock();
-        int newId = getter.getResult();
-        serial.set(newId + 1).unlock();
-        return newId;
+    public int generate() {
+        return serial.getAndAccumulate(1, Integer::sum);
     }
 }
 
@@ -41,15 +33,7 @@ class A extends Executable {
 
     @Override
     public void execute() {
-        try {
-            int newId = generator.generate();
-            produce(ScheduleWithSharedResource.Result, String.format("%s: id %d", Thread.currentThread().getName(), newId));
-        } catch (IllegalAccessException | InterruptedException e) {
-            if (e instanceof IllegalAccessException) {
-                error("resource not locked");
-            } else {
-                error("thread interrupted while requesting lock");
-            }
-        }
+        int newId = generator.generate();
+        produce(ScheduleWithSharedResource.Result, String.format("%s: id %d", Thread.currentThread().getName(), newId));
     }
 }
