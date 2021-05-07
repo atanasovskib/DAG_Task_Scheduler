@@ -1,8 +1,6 @@
 package dev.atanasovski.dagscheduler;
 
 import dev.atanasovski.dagscheduler.algorithms.SchedulingAlgorithm;
-import org.jgrapht.alg.CycleDetector;
-import org.jgrapht.graph.DefaultEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,19 +34,15 @@ public class Scheduler {
 
     public void execute(Schedule schedule) {
         Objects.requireNonNull(schedule);
-        CycleDetector<Executable, DefaultEdge> cycleDetector = new CycleDetector<>(schedule.getDependencies());
-        if (cycleDetector.detectCycles()) {
-            throw new IllegalArgumentException("Schedule contains cyclic dependencies between executable tasks");
-        }
 
-        logger.info("Starting schedule execution");
+        logger.debug("Starting schedule execution");
         this.schedule = schedule;
         if (this.algorithm.usesPriority()) {
             this.algorithm.calculatePriorities(this.schedule);
         }
 
         while (!this.schedule.isDone()) {
-            logger.info("Schedule not done, more tasks to be scheduled or still executing");
+            logger.debug("Schedule not done, more tasks to be scheduled or still executing");
             synchronized (this) {
                 // TODO: Blagoj, implement this like a proper programmer
                 if (this.isBounded) {
@@ -66,7 +60,7 @@ public class Scheduler {
                     }
                 } else {
                     Set<Executable> readyTasks = new HashSet<>(Arrays.asList(this.schedule.getReadyTasks()));
-                    logger.info("Ready tasks: " + readyTasks.size());
+                    logger.debug("Ready tasks: " + readyTasks.size());
                     while (!readyTasks.isEmpty()) {
                         Executable chosen = this.algorithm.choose(readyTasks.toArray(new Executable[0]));
                         readyTasks.remove(chosen);
@@ -80,7 +74,7 @@ public class Scheduler {
 
                 if (!this.schedule.isDone()) {
                     try {
-                        logger.info("Waiting called from: {}", Thread.currentThread().getName());
+                        logger.debug("Waiting called from: {}", Thread.currentThread().getName());
                         this.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -90,7 +84,7 @@ public class Scheduler {
 
         }
 
-        logger.info("Execution done in scheduler");
+        logger.debug("Execution done in scheduler");
         synchronized (this) {
             this.schedule = null;
         }
@@ -102,7 +96,7 @@ public class Scheduler {
         Objects.requireNonNull(this.schedule);
         this.currentRunningTasks.decrementAndGet();
         this.schedule.notifyDone(task);
-        logger.info("Waking up scheduler from: {}", Thread.currentThread().getName());
+        logger.debug("Waking up scheduler from: {}", Thread.currentThread().getName());
         this.notifyAll();
         logger.info("Task done: {}", task.getId());
     }
@@ -110,7 +104,7 @@ public class Scheduler {
     public synchronized void notifyError(List<String> errors) {
         Objects.requireNonNull(this.schedule);
         this.schedule.notifyError(errors);
-        logger.info("Error in task {}, waking up scheduler", errors.toString());
+        logger.debug("Error in task {}, waking up scheduler", errors.toString());
         this.notifyAll();
     }
 }

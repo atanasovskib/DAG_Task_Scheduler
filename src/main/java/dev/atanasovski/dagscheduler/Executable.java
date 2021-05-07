@@ -15,9 +15,6 @@ public abstract class Executable implements Runnable {
     private float executionWeight = -1;
     private int executionTime = 0;
 
-    public void setExecutionWeight(float weight) {
-        this.executionWeight = weight;
-    }
 
     protected Executable(String id, int executionTimeEstimate) {
         this.id = id;
@@ -26,6 +23,10 @@ public abstract class Executable implements Runnable {
 
     protected Executable(String id) {
         this.id = id;
+    }
+
+    public void setExecutionWeight(float weight) {
+        this.executionWeight = weight;
     }
 
     @Override
@@ -65,13 +66,6 @@ public abstract class Executable implements Runnable {
         return outputParameters;
     }
 
-    private void setOutputParameters() {
-    }
-
-    private Map<String, List<Object>> getInputParameters() {
-        return null;
-    }
-
     public final String getId() {
         return id;
     }
@@ -80,10 +74,10 @@ public abstract class Executable implements Runnable {
     public void run() {
         Objects.requireNonNull(this.scheduler, "Scheduler not set, can not execute");
 
-        logger.info("Starting exe: {}", this.getId());
+        logger.debug("Starting exe: {}", this.getId());
         this.errors.clear();
         this.execute();
-        logger.info("Done exe: {}", this.getId());
+        logger.debug("Done exe: {}", this.getId());
         if (this.errors.isEmpty()) {
             this.scheduler.notifyDone(this);
         } else {
@@ -143,6 +137,6 @@ public abstract class Executable implements Runnable {
 
     @Override
     public String toString() {
-        return this.getId();
+        return String.format("Executable[id=%s]", this.getId());
     }
 }

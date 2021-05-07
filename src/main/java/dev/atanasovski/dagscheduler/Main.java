@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
     static final Logger logger = LoggerFactory.getLogger(Main.class);
-
-    public static void main(String... args) throws InterruptedException {
+    public static void main(String... args) {
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
         var schedule = new LogInSchedule("some user", "pass hash");
         var s = new Scheduler(new DummySchedulingAlgorithm());
         s.execute(schedule);

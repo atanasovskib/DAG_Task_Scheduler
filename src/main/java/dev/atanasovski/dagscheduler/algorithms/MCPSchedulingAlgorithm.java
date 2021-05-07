@@ -2,8 +2,8 @@ package dev.atanasovski.dagscheduler.algorithms;
 
 import dev.atanasovski.dagscheduler.Executable;
 import dev.atanasovski.dagscheduler.Schedule;
-import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,14 +30,13 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         }
 
         final List<Executable> readyAsList = Arrays.asList(readyTasks);
-        logger.info("choosing from: {}", readyAsList.toString());
+        logger.info("choosing from: {}", readyAsList);
         List<Executable> sorted = alapLists.entrySet().stream()
                 .filter(entry -> readyAsList.contains(entry.getKey()))
-                .sorted((x, y) ->
-                        x.getValue().toString().compareTo(y.getValue().toString()))
+                .sorted(Comparator.comparing(x -> x.getValue().toString()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
-        logger.info("sorted: " + sorted.toString());
+        logger.info("sorted: " + sorted);
         return sorted.get(0);
     }
 
@@ -52,7 +51,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         schedule.getDependencies().vertexSet().forEach(exe -> createALAPListForAllNodes(schedule.getDependencies(), exe));
     }
 
-    private void calculateAlap(final DirectedGraph<Executable, DefaultEdge> graph) {
+    private void calculateAlap(final DirectedAcyclicGraph<Executable, DefaultEdge> graph) {
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
@@ -62,7 +61,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         this.alapTimes.forEach((key, value) -> logger.debug("ALAP time for " + key.getId() + ": " + value));
     }
 
-    private int alapFromOneNode(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+    private int alapFromOneNode(final DirectedAcyclicGraph<Executable, DefaultEdge> graph, final Executable current) {
         if (this.alapTimes.containsKey(current)) {
             return this.alapTimes.get(current);
         }
@@ -75,7 +74,9 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
         } else {
             Set<DefaultEdge> edges = graph.outgoingEdgesOf(current);
             Stream<Executable> neighbours = edges.stream().map(graph::getEdgeTarget);
-            int minStartTimeOfNeighbours = neighbours.map(next -> alapFromOneNode(graph, next)).min(Integer::compare).get();
+            int minStartTimeOfNeighbours = neighbours.map(next -> alapFromOneNode(graph, next))
+                    .min(Integer::compare)
+                    .orElse(0);
             int minStartTimeOfCurrent = -current.getExecutionTime() + minStartTimeOfNeighbours;
             this.minAlap = Math.min(minStartTimeOfCurrent, this.minAlap);
             this.alapTimes.put(current, minStartTimeOfCurrent);
@@ -84,7 +85,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
 
     }
 
-    private List<Integer> createALAPListForAllNodes(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+    private List<Integer> createALAPListForAllNodes(final DirectedAcyclicGraph<Executable, DefaultEdge> graph, final Executable current) {
         logger.debug("calculateALAP List for: " + current.getId());
         if (alapLists.containsKey(current)) {
             logger.debug("result exists: " + alapLists.get(current));
@@ -106,7 +107,7 @@ public class MCPSchedulingAlgorithm implements SchedulingAlgorithm {
             result.add(this.alapTimes.get(current));
             result.sort(Integer::compare);
             alapLists.put(current, result);
-            logger.debug("Calculated ALAP for: " + current.getId() + "; " + result.toString());
+            logger.debug("Calculated ALAP for: " + current.getId() + "; " + result);
             return result;
         }
     }

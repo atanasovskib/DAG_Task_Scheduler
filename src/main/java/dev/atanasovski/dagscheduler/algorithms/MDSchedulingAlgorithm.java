@@ -2,8 +2,8 @@ package dev.atanasovski.dagscheduler.algorithms;
 
 import dev.atanasovski.dagscheduler.Executable;
 import dev.atanasovski.dagscheduler.Schedule;
-import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +29,9 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         }
 
         this.calculatePriorities1(this.schedule);
-        logger.info("Choosing from: {}", Arrays.toString(readyTasks));
+        logger.debug("Choosing from: {}", Arrays.toString(readyTasks));
         Executable chosen = Arrays.stream(readyTasks).min((a, b) -> Float.compare(a.getExecutionWeight(), b.getExecutionWeight())).get();
-        logger.info("Chosen: {}", chosen);
+        logger.debug("Chosen: {}", chosen);
         return chosen;
     }
 
@@ -39,9 +39,9 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         Objects.requireNonNull(schedule);
         reset();
         this.calculateALAP(schedule.getDependencies());
-        logger.info("ALAP: {}", this.alapTimes);
+        logger.debug("ALAP: {}", this.alapTimes);
         this.calculateASAP(schedule.getDependencies());
-        logger.info("ASAP: {}", this.asapTimes);
+        logger.debug("ASAP: {}", this.asapTimes);
         this.calculateMD(schedule.getDependencies());
     }
 
@@ -51,7 +51,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         this.minALAP = Integer.MAX_VALUE;
     }
 
-    private void calculateMD(DirectedGraph<Executable, DefaultEdge> dependencies) {
+    private void calculateMD(DirectedAcyclicGraph<Executable, DefaultEdge> dependencies) {
         StringBuilder sb = new StringBuilder();
         dependencies.vertexSet().forEach(exe -> {
             float diff = this.alapTimes.get(exe) - this.asapTimes.get(exe);
@@ -62,7 +62,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         logger.info("MD: {}", sb);
     }
 
-    private void calculateALAP(final DirectedGraph<Executable, DefaultEdge> graph) {
+    private void calculateALAP(final DirectedAcyclicGraph<Executable, DefaultEdge> graph) {
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
@@ -71,7 +71,7 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
         allVertices.forEach(exe -> this.alapTimes.put(exe, executionTime + this.alapTimes.get(exe)));
     }
 
-    private int alapFromOneNode(final DirectedGraph<Executable, DefaultEdge> graph, final Executable current) {
+    private int alapFromOneNode(final DirectedAcyclicGraph<Executable, DefaultEdge> graph, final Executable current) {
         if (this.alapTimes.containsKey(current)) {
             return this.alapTimes.get(current);
         }
@@ -93,14 +93,14 @@ public class MDSchedulingAlgorithm implements SchedulingAlgorithm {
 
     }
 
-    private void calculateASAP(final DirectedGraph<Executable, DefaultEdge> graph) {
+    private void calculateASAP(final DirectedAcyclicGraph<Executable, DefaultEdge> graph) {
         Set<Executable> allVertices = graph.vertexSet();
         allVertices.stream()
                 .filter(task -> graph.inDegreeOf(task) == 0)
                 .forEach(task -> calculateASAPFromOneNode(graph, task, 0));
     }
 
-    private void calculateASAPFromOneNode(final DirectedGraph<Executable, DefaultEdge> graph, Executable current, int startTime) {
+    private void calculateASAPFromOneNode(final DirectedAcyclicGraph<Executable, DefaultEdge> graph, Executable current, int startTime) {
         if (this.asapTimes.containsKey(current)) {
             int min = Math.max(this.asapTimes.get(current), startTime);
             this.asapTimes.put(current, min);

@@ -29,7 +29,7 @@ class T extends Executable {
 
     @Override
     public void execute() {
-        logger.info("Doing something in: {} for {} seconds", getId(), getExecutionTime());
+        logger.debug("Doing something in: {} for {} seconds", getId(), getExecutionTime());
         try {
             Thread.sleep(getExecutionTime() * 1000);
         } catch (InterruptedException e) {

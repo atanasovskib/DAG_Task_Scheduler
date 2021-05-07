@@ -1,15 +1,14 @@
 package dev.atanasovski.dagscheduler;
 
-import org.jgrapht.DirectedGraph;
-import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DirectedAcyclicGraph;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class Schedule {
-    private final DirectedGraph<Executable, DefaultEdge> dependencies = new DefaultDirectedGraph<>(DefaultEdge.class);
+    private final DirectedAcyclicGraph<Executable, DefaultEdge> dependencies = new DirectedAcyclicGraph<>(DefaultEdge.class);
     private boolean hasErrors = false;
     private final ConcurrentMap<String, List<Object>> results = new ConcurrentHashMap<>();
     private final List<String> errors = new LinkedList<>();
@@ -54,12 +53,12 @@ public class Schedule {
             dependenciesOfTask.stream().map(this.dependencies::getEdgeTarget)
                     .forEach(dependant -> dependant.addInput(outputParameters));
         } else {
-            outputParameters.entrySet().forEach(entry -> {
-                if (!this.results.containsKey(entry.getKey())) {
-                    this.results.put(entry.getKey(), new LinkedList<>());
+            outputParameters.forEach((key, value) -> {
+                if (!this.results.containsKey(key)) {
+                    this.results.put(key, new LinkedList<>());
                 }
 
-                this.results.get(entry.getKey()).addAll(entry.getValue());
+                this.results.get(key).addAll(value);
             });
         }
 
@@ -90,7 +89,7 @@ public class Schedule {
         return this.errors;
     }
 
-    public DirectedGraph<Executable, DefaultEdge> getDependencies() {
+    public DirectedAcyclicGraph<Executable, DefaultEdge> getDependencies() {
         return dependencies;
     }
 }

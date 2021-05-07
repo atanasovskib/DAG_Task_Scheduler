@@ -3,9 +3,6 @@ package dev.atanasovski.dagscheduler.examples.login;
 import dev.atanasovski.dagscheduler.Executable;
 import dev.atanasovski.dagscheduler.Schedule;
 
-/**
- * Created by Blagoj on 02-Mar-16.
- */
 public class LogInSchedule extends Schedule {
     public LogInSchedule(String userName, String passHash) {
         Executable cred = new ValidateCredentials("c.credentials")
